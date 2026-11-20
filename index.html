@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c0e11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Osmička">
+<title>Časomíra Osmička</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Saira+Condensed:wght@500;700;800&display=swap">
+<style>
+/* Layout: one-column pit-wall console, tab bar pinned at the bottom; a race is a full-screen board split into two lanes */
+:root{
+  color-scheme: dark;
+  --bg:#0c0e11; --surface:#15181d; --surface-2:#1d2128; --line:#2a3039;
+  --fg:#eef1f5; --muted:#8d96a5; --ink:#0c0e11;
+  --l1:#f7c916; --l2:#3fb0ff;
+  --red:#ff3b30; --red-dim:#2c1414; --go:#2fd36f; --purple:#b46cff;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+:root{padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body.racing{overflow:hidden}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:12px;padding:12px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.flag{width:28px;height:20px;border-radius:3px;background:repeating-conic-gradient(var(--fg) 0 25%,var(--bg) 0 50%) 0 0/10px 10px;flex:none}
+.brand{font:800 22px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.brand small{display:block;font:500 12px/1.2 var(--f-body);letter-spacing:.04em;color:var(--muted);text-transform:none;margin-top:3px}
+.camdot{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.camdot i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.camdot.on i{background:var(--go);box-shadow:0 0 8px var(--go)}
+
+main{padding:16px max(16px,env(safe-area-inset-right,0px)) calc(96px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h2{font:700 15px/1.2 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+h3{font:700 22px/1.15 var(--f-display);letter-spacing:.02em;margin:0;text-wrap:balance}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.hint{color:var(--muted);font-size:14px;margin:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{justify-content:space-between}
+
+/* lane picker */
+.lanepick{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.chip{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;padding:7px 9px;border-radius:6px;color:var(--ink);white-space:nowrap}
+.chip.l0{background:var(--l1)} .chip.l1{background:var(--l2)}
+.chip small{display:block;font:600 11px/1.1 var(--f-body);letter-spacing:.02em;text-transform:none;margin-top:3px;opacity:.8}
+select,input[type=text]{width:100%;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px}
+input[type=range]{width:100%;accent-color:var(--fg)}
+
+/* controls */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
+.seg button{background:none;border:0;border-radius:6px;padding:9px 6px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--fg);color:var(--ink)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:44px;height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-size:22px;line-height:1}
+.stepper output{min-width:64px;text-align:center;font:700 26px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stepper output small{font:500 13px var(--f-body);color:var(--muted);margin-left:3px}
+.btn{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:11px 14px;font-weight:600}
+.btn.primary{background:var(--fg);color:var(--ink);border-color:var(--fg)}
+.btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+.btn.ghost{background:none}
+.btn.small{padding:7px 10px;font-size:14px}
+.btn:disabled{opacity:.4;cursor:default}
+.go-btn{border:0;border-radius:var(--r);padding:18px;font:800 26px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;background:var(--red);color:#fff;box-shadow:0 6px 0 color-mix(in srgb,var(--red) 50%,#000)}
+.go-btn:active{transform:translateY(3px);box-shadow:0 3px 0 color-mix(in srgb,var(--red) 50%,#000)}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;background:none;border:0;padding:4px 0;text-align:left}
+.toggle .sw{flex:none;width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;transition:background .15s}
+.toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--fg);transition:transform .15s}
+.toggle[aria-pressed=true] .sw{background:var(--go)}
+.toggle[aria-pressed=true] .sw::after{transform:translateX(18px)}
+.toggle span small{display:block;color:var(--muted);font-size:13px}
+
+/* lists & tables */
+.list{display:flex;flex-direction:column}
+.list>div{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);min-width:0}
+.list>div:first-child{border-top:0}
+.grow{flex:1;min-width:0}
+.ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tblwrap{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:600 12px/1 var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+td.r,th.r{text-align:right}
+.pos{font:800 20px/1 var(--f-display);width:28px}
+.fl{color:var(--purple)} .pb{color:var(--go)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.dot.l0{background:var(--l1)} .dot.l1{background:var(--l2)}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+.banner{border-radius:var(--r);padding:14px 16px;background:linear-gradient(90deg,color-mix(in srgb,var(--l1) 18%,var(--surface)),var(--surface));border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.empty{color:var(--muted);text-align:center;padding:18px 8px;border:1px dashed var(--line);border-radius:var(--r)}
+.pchips{display:flex;flex-wrap:wrap;gap:8px}
+.pchips button{border:1px solid var(--line);background:var(--surface-2);border-radius:20px;padding:8px 14px}
+.pchips button[aria-pressed=true]{background:var(--fg);color:var(--ink);border-color:var(--fg)}
+.match{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.match .vs{display:flex;flex-direction:column;gap:3px;min-width:0}
+.match .no{font:700 14px/1 var(--f-display);color:var(--muted);width:26px}
+.win{font-weight:700}
+.champ{text-align:center;padding:18px;border-radius:var(--r);background:repeating-conic-gradient(color-mix(in srgb,var(--fg) 8%,transparent) 0 25%,transparent 0 50%) 0 0/24px 24px,var(--surface);border:1px solid var(--line)}
+.champ b{display:block;font:800 34px/1.1 var(--f-display);letter-spacing:.04em;text-transform:uppercase}
+
+/* camera box */
+.cam-slot{display:flex;justify-content:center;background:#000;border-radius:var(--r);overflow:hidden;min-height:60px}
+#camHold{position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden}
+#camBox{position:relative;display:inline-block;line-height:0;touch-action:none;max-width:100%}
+#camBox video{display:block;max-width:100%;max-height:var(--camh,60vh);width:auto;height:auto}
+#camBox canvas{position:absolute;inset:0;width:100%;height:100%}
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meter{display:flex;flex-direction:column;gap:6px}
+.meter .bar{height:10px;border-radius:5px;background:var(--surface-2);position:relative;overflow:hidden}
+.meter .bar i{position:absolute;inset:0 auto 0 0;width:0;border-radius:5px}
+.meter .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--fg)}
+.meter.l0 .bar i{background:var(--l1)} .meter.l1 .bar i{background:var(--l2)}
+.meter .cnt{font:700 22px/1 var(--f-display)}
+.meter.flash .cnt{color:var(--go)}
+
+/* tab bar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));z-index:5}
+nav.tabs button{background:none;border:0;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:12px;font-weight:600}
+nav.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.tabs button[aria-current=page]{color:var(--fg)}
+
+/* race board */
+.race{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.race-top{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.race-top .x{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:18px}
+.race-info{flex:1;min-width:0;font-size:13px;color:var(--muted);line-height:1.25}
+.race-info b{display:block;color:var(--fg);font:700 16px/1.2 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.clock{font:800 34px/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.race .cam-slot{border-radius:0;--camh:26vh}
+.lights{display:flex;justify-content:center;gap:clamp(6px,2.5vw,14px);padding:8px 12px}
+.lights span{width:min(13vw,52px);aspect-ratio:1;border-radius:50%;background:var(--red-dim);border:3px solid #050607;transition:background .05s}
+.lights span.on{background:var(--red);box-shadow:0 0 22px var(--red)}
+.lights span.green{background:var(--go);box-shadow:0 0 22px var(--go)}
+.lanes{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 6px;min-height:0}
+.lane{--lc:var(--l1);position:relative;border-radius:var(--r);background:var(--surface);border:2px solid color-mix(in srgb,var(--lc) 55%,var(--line));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:52px 8px 56px;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;min-height:0;cursor:pointer}
+.lane.l1{--lc:var(--l2)}
+.lane-head{position:absolute;top:0;left:0;right:0;background:var(--lc);color:var(--ink);padding:7px 10px;display:flex;flex-direction:column;line-height:1.1}
+.lane-head b{font:800 13px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase}
+.lane-head span{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane-pos{font:800 20px/1 var(--f-display);color:var(--muted);min-height:20px}
+.lane-count{font:800 clamp(72px,24vw,150px)/.9 var(--f-display);color:var(--lc);font-variant-numeric:tabular-nums}
+.lane-count small{font-size:.32em;color:var(--muted);margin-left:2px}
+.lane-last{font:700 26px/1 var(--f-display);font-variant-numeric:tabular-nums;min-height:26px}
+.lane-meta{font-size:13px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.lane-tag{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:#fff;padding:5px 7px;border-radius:5px}
+.lane-undo{position:absolute;bottom:8px;left:8px;right:8px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:9px;font-size:14px;font-weight:600;color:var(--muted)}
+.lane.hit{animation:hit .4s ease-out}
+.lane.ign{animation:ign .3s ease-out}
+@keyframes hit{from{background:color-mix(in srgb,var(--lc) 45%,var(--surface))}}
+@keyframes ign{from{background:var(--surface-2)}}
+.lane.done .lane-head{background:repeating-conic-gradient(var(--fg) 0 25%,var(--bg) 0 50%) 0 0/14px 14px}
+.lane.done .lane-head b,.lane.done .lane-head span{background:var(--lc);align-self:flex-start;padding:2px 5px;border-radius:3px}
+.race-bottom{padding:10px 12px;display:flex;gap:10px;justify-content:center;align-items:center;min-height:64px}
+.race-bottom .go-btn{flex:1;max-width:420px}
+.race-msg{font:700 20px/1.2 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center}
+.sheet{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 96%,transparent);overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:3}
+.sheet-in{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.winner{text-align:center;padding:10px 0 4px}
+.winner small{font:700 14px/1 var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.winner b{display:block;font:800 clamp(40px,12vw,64px)/1 var(--f-display);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
+.confirm{position:absolute;inset:auto 12px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;z-index:4;box-shadow:0 10px 40px #000a}
+@media (orientation:landscape) and (max-height:500px){
+  .race .cam-slot{--camh:22vh}
+  .lights{padding:2px 12px}
+  .lights span{width:min(7vh,40px)}
+  .lane{padding:44px 8px 50px}
+  .lane-count{font-size:clamp(48px,16vh,120px)}
+}
+@media (prefers-reduced-motion:reduce){.lane.hit,.lane.ign{animation:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="flag" aria-hidden="true"></div>
+  <div class="brand">Osmička<small>časomíra pro autodráhu</small></div>
+  <div class="camdot" id="camDot"><i></i><span>kamera vyp.</span></div>
+</header>
+<main id="main"></main>
+
+<nav class="tabs" id="tabs">
+  <button data-act="tab" data-tab="race"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>Závod</button>
+  <button data-act="tab" data-tab="tour"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/></svg>Turnaj</button>
+  <button data-act="tab" data-tab="cam"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Kamera</button>
+  <button data-act="tab" data-tab="records"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 2h4"/></svg>Rekordy</button>
+  <button data-act="tab" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 5.6M18 14.5c1.9.8 3 2.8 3 5.5"/></svg>Jezdci</button>
+</nav>
+
+<div id="camHold"><div id="camBox"><video id="camVideo" playsinline muted autoplay></video><canvas id="camOv"></canvas></div></div>
+
+<div class="race" id="race" hidden>
+  <div class="race-top">
+    <button class="x" data-ract="close" aria-label="Zavřít závod">✕</button>
+    <div class="race-info" id="raceInfo"></div>
+    <div class="clock" id="clock">0:00,0</div>
+  </div>
+  <div class="cam-slot" id="raceCam" hidden></div>
+  <div class="lights" id="lights"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="lanes" id="lanes"></div>
+  <div class="race-bottom" id="raceBottom"></div>
+  <div class="sheet" id="results" hidden></div>
+  <div class="confirm" id="raceConfirm" hidden>
+    <b>Zrušit závod?</b>
+    <span class="hint">Naměřená kola se neuloží.</span>
+    <div class="row"><button class="btn" data-ract="keep">Pokračovat</button><button class="btn danger" data-ract="abort">Zrušit závod</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const CAMBOX=$("#camBox");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const fmtLap=ms=>ms==null?"–":(ms/1000).toFixed(3).replace(".",",");
+const fmtClock=ms=>{ms=Math.max(0,ms);const m=Math.floor(ms/60000),s=Math.floor(ms/1000)%60,t=Math.floor(ms/100)%10;return `${m}:${String(s).padStart(2,"0")},${t}`};
+const kol=n=>n===1?"kolo":(n>=2&&n<=4?"kola":"kol");
+const fmtDate=t=>new Date(t).toLocaleString("cs-CZ",{day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"});
+const LANE_LABEL=["Dráha 1","Dráha 2"];
+const PTS_WIN=3, PTS_FL=1;
+
+/* ---------- state & storage (this device) ---------- */
+const DEF={minLap:1.5,jumpPenalty:true,sound:true,voice:true,mirror:true,cars:["Žlutá #53","Modrá #24"],mode:"laps",laps:10,minutes:3,
+  cam:{auto:true,thr:12,zones:[{x:.62,y:.5,w:.16,h:.16},{x:.38,y:.5,w:.16,h:.16}]}};
+const LS="osmicka.v1";
+let S=load();
+function normalize(s){
+  s=s&&typeof s==="object"?s:{};
+  const st={...DEF,...(s.settings||{})};
+  st.cam={...DEF.cam,...(st.cam||{})};
+  if(!Array.isArray(st.cam.zones)||st.cam.zones.length!==2) st.cam.zones=JSON.parse(JSON.stringify(DEF.cam.zones));
+  if(!Array.isArray(st.cars)||st.cars.length!==2) st.cars=[...DEF.cars];
+  return {drivers:Array.isArray(s.drivers)?s.drivers:[],settings:st,tournaments:Array.isArray(s.tournaments)?s.tournaments:[],races:Array.isArray(s.races)?s.races:[],setup:Array.isArray(s.setup)?s.setup:["",""]};
+}
+function load(){try{return normalize(JSON.parse(localStorage.getItem(LS)||"null"))}catch{return normalize(null)}}
+let saveT=0;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){toast("Uložení se nepovedlo: v telefonu je plné úložiště prohlížeče.")}},150)}
+function saveNow(){clearTimeout(saveT);try{localStorage.setItem(LS,JSON.stringify(S))}catch{}}
+try{navigator.storage?.persist?.()}catch{}
+
+const driverName=id=>S.drivers.find(d=>d.id===id)?.name||"";
+const laneName=(i,id)=>driverName(id)||S.settings.cars[i];
+
+/* ---------- sound & voice ---------- */
+let actx=null;
+function audioInit(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch{}}
+function beep(f,d=.12,type="square",vol=.12,delay=0){
+  if(!S.settings.sound||!actx)return;
+  try{const t=actx.currentTime+delay,o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d+.02)}catch{}
+}
+function say(text){
+  if(!S.settings.voice||!window.speechSynthesis)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="cs-CZ";u.rate=1.08;speechSynthesis.speak(u)}catch{}
+}
+const buzz=ms=>{try{navigator.vibrate?.(ms)}catch{}};
+
+/* ---------- UI state ---------- */
+const ui={tab:"race",confirm:null,tourOpen:null,camLane:0,
+  tf:{open:false,name:"",players:[],legs:2,mode:"laps",laps:10,minutes:3}};
+let pendingRender=false;
+function typing(){const a=document.activeElement;return a&&a.matches&&a.matches("#main input[type=text]")}
+function render(force){
+  if(!force&&typing()){pendingRender=true;return}
+  pendingRender=false;
+  const views={race:viewRace,tour:viewTour,cam:viewCam,records:viewRecords,settings:viewSettings};
+  if(CAMBOX.parentElement?.id==="camSlot")$("#camHold").appendChild(CAMBOX);
+  $("#main").innerHTML=views[ui.tab]();
+  document.querySelectorAll("#tabs button").forEach(b=>b.dataset.tab===ui.tab?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  placeCam();
+}
+document.addEventListener("focusout",()=>setTimeout(()=>{if(pendingRender&&!typing())render(true)},0));
+let toastT;
+function toast(msg){let t=$("#toast");if(!t){t=document.createElement("div");t.id="toast";t.style.cssText="position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--ink);padding:12px 14px;border-radius:10px;font-weight:600;z-index:40;text-align:center";document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+
+/* ---------- small components ---------- */
+const stepper=(key,val,unit)=>`<div class="stepper"><button data-act="step" data-key="${key}" data-d="-1" aria-label="Méně">−</button><output class="num">${esc(val)}<small>${unit}</small></output><button data-act="step" data-key="${key}" data-d="1" aria-label="Více">+</button></div>`;
+const toggle=(key,on,label,sub)=>`<button class="toggle" data-act="toggle" data-key="${key}" aria-pressed="${on}"><span>${label}${sub?`<small>${sub}</small>`:""}</span><i class="sw"></i></button>`;
+const driverOptions=(sel,i)=>`<option value="">${esc(S.settings.cars[i])} (bez jezdce)</option>`+S.drivers.map(d=>`<option value="${esc(d.id)}"${d.id===sel?" selected":""}>${esc(d.name)}</option>`).join("");
+const addDriverForm=id=>`<form class="row" data-form="addDriver" style="flex-wrap:nowrap"><input type="text" id="${id}" name="n" placeholder="Jméno jezdce" maxlength="24" autocomplete="off"><button class="btn" type="submit">Přidat</button></form>`;
+const modeBlock=(scope,mode,laps,minutes)=>`
+  <div class="seg" role="group" aria-label="Typ závodu">
+    <button data-act="mode" data-scope="${scope}" data-v="laps" aria-pressed="${mode==="laps"}">Na počet kol</button>
+    <button data-act="mode" data-scope="${scope}" data-v="time" aria-pressed="${mode==="time"}">Na čas</button>
+  </div>
+  <div class="row spread"><span>${mode==="laps"?"Počet kol":"Délka závodu"}</span>${mode==="laps"?stepper(scope+"laps",laps,kol(laps)):stepper(scope+"minutes",minutes,"min")}</div>`;
+
+/* ---------- tournament logic ---------- */
+function roundRobin(ids){
+  const a=[...ids];if(a.length%2)a.push(null);const n=a.length,out=[];
+  for(let r=0;r<n-1;r++){for(let i=0;i<n/2;i++){const x=a[i],y=a[n-1-i];if(x&&y)out.push(r%2?[y,x]:[x,y])}a.splice(1,0,a.pop())}
+  return out;
+}
+function buildMatches(players,legs){
+  const pairs=roundRobin(players),m=[];
+  for(let leg=0;leg<legs;leg++)for(const [x,y] of pairs)m.push({id:uid(),leg,l1:leg%2?y:x,l2:leg%2?x:y,res:null,raceId:null});
+  return m;
+}
+const nextMatch=t=>t.matches.find(m=>!m.res);
+const tourDone=t=>t.matches.length>0&&t.matches.every(m=>m.res);
+function standings(t){
+  const rows=Object.fromEntries(t.players.map(p=>[p,{id:p,pts:0,w:0,n:0,best:null}]));
+  for(const m of t.matches){if(!m.res)continue;
+    for(const p of [m.l1,m.l2]){const r=rows[p];if(!r)continue;r.n++;const b=m.res.best?.[p];if(b!=null&&(r.best==null||b<r.best))r.best=b}
+    if(rows[m.res.winner]){rows[m.res.winner].w++;rows[m.res.winner].pts+=PTS_WIN}
+    if(rows[m.res.fastest])rows[m.res.fastest].pts+=PTS_FL;
+  }
+  return Object.values(rows).sort((a,b)=>b.pts-a.pts||b.w-a.w||(a.best??1e12)-(b.best??1e12));
+}
+const activeTour=()=>[...S.tournaments].sort((a,b)=>b.created-a.created).find(t=>!tourDone(t));
+
+/* ---------- views ---------- */
+function viewRace(){
+  const st=S.settings,t=activeTour(),nm=t&&nextMatch(t);
+  const camOn=Cam.running&&st.cam.auto;
+  return `
+  ${nm?`<div class="banner"><h2>Turnaj · ${esc(t.name)}</h2>
+    <div class="row spread"><div class="grow"><div><span class="dot l0"></span>${esc(driverName(nm.l1)||"?")}</div><div><span class="dot l1"></span>${esc(driverName(nm.l2)||"?")}</div></div>
+    <button class="btn primary" data-act="playMatch" data-t="${t.id}" data-m="${nm.id}">Připravit závod ${t.matches.indexOf(nm)+1}/${t.matches.length}</button></div></div>`:""}
+  <section class="card">
+    <h3>Nový závod</h3>
+    <div class="lanepick">
+      <span class="chip l0">Dráha 1<small>${esc(st.cars[0])}</small></span>
+      <select id="setup0" data-setup="0" aria-label="Jezdec na dráze 1">${driverOptions(S.setup[0],0)}</select>
+      <span class="chip l1">Dráha 2<small>${esc(st.cars[1])}</small></span>
+      <select id="setup1" data-setup="1" aria-label="Jezdec na dráze 2">${driverOptions(S.setup[1],1)}</select>
+    </div>
+    <div class="row"><button class="btn small ghost" data-act="swapSetup">⇅ Prohodit dráhy</button>${S.drivers.length?"":`<button class="btn small ghost" data-act="tab" data-tab="settings">+ Přidat jezdce</button>`}</div>
+    ${modeBlock("",st.mode,st.laps,st.minutes)}
+    <button class="go-btn" data-act="startRace">Na start</button>
+    <p class="hint">${camOn?"Kola počítá kamera. Klepnutím na dráhu můžeš kolo přidat i ručně.":"Při závodě klepni na polovinu displeje s barvou dráhy, když auto projede cílem. Kola může počítat i kamera, nastavíš ji v záložce Kamera."}</p>
+  </section>
+  ${recentRaces(3)}`;
+}
+function recentRaces(n){
+  const rs=S.races.slice(0,n);
+  if(!rs.length)return "";
+  return `<section class="card"><h2>Poslední závody</h2><div class="list">${rs.map(raceRow).join("")}</div>${S.races.length>n?`<button class="btn small ghost" data-act="tab" data-tab="records">Celá historie</button>`:""}</section>`;
+}
+function raceRow(r){
+  const w=r.lanes[r.winnerLane];
+  return `<div><span class="dot l${r.winnerLane}"></span><div class="grow"><div class="ellip"><b>${esc(w?.name||"–")}</b> vyhrál/a · ${r.lanes.map(l=>esc(l.name)).join(" vs ")}</div><div class="hint">${fmtDate(r.at)} · ${r.mode==="laps"?`${r.target} ${kol(r.target)}`:`${r.target} min`} · nejrychlejší kolo ${fmtLap(r.fastest)} s</div></div></div>`;
+}
+
+function viewTour(){
+  if(ui.tourOpen){const t=S.tournaments.find(x=>x.id===ui.tourOpen);if(t)return viewTourDetail(t);ui.tourOpen=null}
+  const list=[...S.tournaments].sort((a,b)=>b.created-a.created);
+  const f=ui.tf,open=f.open||!list.length;
+  return `
+  ${open?tourForm():`<button class="go-btn" data-act="tfOpen">Nový turnaj</button>`}
+  <section class="card"><h2>Turnaje</h2>
+  ${list.length?`<div class="list">${list.map(t=>{const done=t.matches.filter(m=>m.res).length,lead=standings(t)[0];return `<div><div class="grow"><div class="ellip"><b>${esc(t.name)}</b></div><div class="hint">${t.players.length} jezdci · ${done}/${t.matches.length} závodů${lead&&done?` · ${tourDone(t)?"vítěz":"vede"} ${esc(driverName(lead.id))}`:""}</div></div><button class="btn small" data-act="openTour" data-id="${t.id}">Otevřít</button></div>`}).join("")}</div>`:`<div class="empty">Zatím žádný turnaj. Vyber jezdce výše a vytvoř první.</div>`}
+  </section>`;
+}
+function tourForm(){
+  const f=ui.tf,np=f.players.length,races=np>=2?roundRobin(f.players).length*f.legs:0;
+  return `<section class="card">
+    <h3>Nový turnaj</h3>
+    <input type="text" id="tfName" data-bind="tfName" placeholder="Název, např. Velká cena obýváku" maxlength="40" value="${esc(f.name)}" autocomplete="off">
+    <div><h2 style="margin-bottom:8px">Jezdci</h2>
+      ${S.drivers.length?`<div class="pchips">${S.drivers.map(d=>`<button data-act="tfPlayer" data-id="${d.id}" aria-pressed="${f.players.includes(d.id)}">${esc(d.name)}</button>`).join("")}</div>`:`<p class="hint">Nejdřív přidej jezdce.</p>`}
+    </div>
+    ${addDriverForm("tfAdd")}
+    <div class="row spread"><span>Kolikrát se dvojice utká<small class="hint" style="display:block">dráhy se při odvetě prohodí</small></span>${stepper("legs",f.legs,"×")}</div>
+    ${modeBlock("tf",f.mode,f.laps,f.minutes)}
+    <p class="hint">Každý s každým: ${races?`${races} ${races<5?"závody":"závodů"}`:"vyber aspoň 2 jezdce"}. Body: výhra ${PTS_WIN}, nejrychlejší kolo závodu +${PTS_FL}.</p>
+    <div class="row"><button class="btn primary" data-act="createTour" ${np<2?"disabled":""}>Vytvořit turnaj</button>${S.tournaments.length?`<button class="btn ghost" data-act="tfClose">Zavřít</button>`:""}</div>
+  </section>`;
+}
+function viewTourDetail(t){
+  const rows=standings(t),nm=nextMatch(t),done=tourDone(t);
+  return `
+  <div class="row"><button class="btn small ghost" data-act="closeTour">← Turnaje</button></div>
+  <h3>${esc(t.name)}</h3>
+  ${done?`<div class="champ"><h2>Vítěz turnaje</h2><b>${esc(driverName(rows[0]?.id)||"?")}</b><span class="hint">${rows[0]?.pts} bodů</span></div>`:""}
+  ${nm?`<button class="go-btn" data-act="playMatch" data-t="${t.id}" data-m="${nm.id}">Závod ${t.matches.indexOf(nm)+1}: ${esc(driverName(nm.l1))} vs ${esc(driverName(nm.l2))}</button>`:""}
+  <section class="card"><h2>Pořadí</h2><div class="tblwrap"><table>
+    <thead><tr><th></th><th>Jezdec</th><th class="r">Záv.</th><th class="r">Výhry</th><th class="r">Nejl. kolo</th><th class="r">Body</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr><td class="pos">${i+1}</td><td>${esc(driverName(r.id)||"Smazaný jezdec")}</td><td class="r">${r.n}</td><td class="r">${r.w}</td><td class="r">${fmtLap(r.best)}</td><td class="r"><b>${r.pts}</b></td></tr>`).join("")}</tbody>
+  </table></div><p class="hint">${t.mode==="laps"?`${t.laps} ${kol(t.laps)}`:`${t.minutes} min`} na závod · výhra ${PTS_WIN} b · nejrychlejší kolo +${PTS_FL} b</p></section>
+  <section class="card"><h2>Rozpis závodů</h2><div class="list">
+  ${t.matches.map((m,i)=>{const r=m.res;const cls=p=>r&&r.winner===p?"win":"";const k=`rm:${m.id}`;
+    return `<div class="match"><span class="no">${i+1}</span><div class="vs">
+      <span class="${cls(m.l1)} ellip"><span class="dot l0"></span>${esc(driverName(m.l1)||"?")}${r&&r.fastest===m.l1?` <span class="fl">⏱</span>`:""}</span>
+      <span class="${cls(m.l2)} ellip"><span class="dot l1"></span>${esc(driverName(m.l2)||"?")}${r&&r.fastest===m.l2?` <span class="fl">⏱</span>`:""}</span></div>
+      ${r?(ui.confirm===k?`<span class="row"><button class="btn small danger" data-act="resetMatch" data-t="${t.id}" data-m="${m.id}">Přejet znovu</button><button class="btn small ghost" data-act="cancelAsk">Ne</button></span>`:`<button class="btn small ghost" data-act="ask" data-key="${k}" aria-label="Přejet závod znovu">↻</button>`)
+       :`<button class="btn small" data-act="playMatch" data-t="${t.id}" data-m="${m.id}">Jet</button>`}
+    </div>`}).join("")}
+  </div><p class="hint"><span class="fl">⏱</span> nejrychlejší kolo závodu</p></section>
+  ${ui.confirm===`dt:${t.id}`?`<div class="row"><button class="btn danger" data-act="delTour" data-id="${t.id}">Opravdu smazat turnaj</button><button class="btn ghost" data-act="cancelAsk">Ponechat</button></div>`:`<button class="btn danger ghost" data-act="ask" data-key="dt:${t.id}">Smazat turnaj</button>`}`;
+}
+
+function viewCam(){
+  const c=S.settings.cam,secure=window.isSecureContext&&navigator.mediaDevices?.getUserMedia;
+  return `
+  <section class="card">
+    <h3>Počítání kol kamerou</h3>
+    <p class="hint">Telefon upevni nad cílovou rovinku zadní kamerou dolů (stojan, lampa, police). Na obraze pak pro každou dráhu umísti zónu kousek <b>za startovní čáru</b>, aby v ní auta na startu nestála. Když zónou projede auto, kolo se započítá.</p>
+    ${secure?(Cam.running
+      ?`<button class="btn" data-act="camStop">Vypnout kameru</button>`
+      :`<button class="go-btn" data-act="camStart">Zapnout kameru</button>`)
+      :`<div class="empty">Kamera tu není dostupná. Aplikace musí běžet na adrese https:// (nebo localhost).</div>`}
+    ${Cam.error?`<p class="hint" style="color:var(--red)">${esc(Cam.error)}</p>`:""}
+  </section>
+  ${Cam.running?`
+  <section class="card">
+    <div class="seg" role="group" aria-label="Kterou zónu posouvám">
+      <button data-act="camLane" data-v="0" aria-pressed="${ui.camLane===0}">Zóna dráhy 1</button>
+      <button data-act="camLane" data-v="1" aria-pressed="${ui.camLane===1}">Zóna dráhy 2</button>
+    </div>
+    <div class="cam-slot" id="camSlot"></div>
+    <p class="hint">Klepni nebo táhni prstem v obraze, kam patří zóna vybrané dráhy.</p>
+    <div class="meters">${[0,1].map(i=>`<div class="meter l${i}" id="meter${i}"><span class="hint">${LANE_LABEL[i]} · průjezdy</span><span class="cnt num" id="cnt${i}">${Cam.test[i]}</span><div class="bar"><i id="bar${i}"></i><b style="left:${Math.min(100,c.thr*2)}%"></b></div></div>`).join("")}</div>
+    <label class="row spread" for="zw"><span>Šířka zóny</span><span class="hint num">${Math.round(c.zones[ui.camLane].w*100)} %</span></label>
+    <input type="range" id="zw" data-zone="w" min="4" max="45" value="${Math.round(c.zones[ui.camLane].w*100)}">
+    <label class="row spread" for="zh"><span>Výška zóny</span><span class="hint num">${Math.round(c.zones[ui.camLane].h*100)} %</span></label>
+    <input type="range" id="zh" data-zone="h" min="4" max="45" value="${Math.round(c.zones[ui.camLane].h*100)}">
+    <label class="row spread" for="thr"><span>Citlivost<small class="hint" style="display:block">nižší číslo = citlivější</small></span><span class="hint num">${c.thr} %</span></label>
+    <input type="range" id="thr" data-thr min="3" max="45" value="${c.thr}">
+    <div class="row"><button class="btn small" data-act="camTestReset">Vynulovat průjezdy</button></div>
+    <p class="hint">Vyzkoušej to: protlač auto zónou. Počítadlo by mělo skočit přesně o 1. Když počítá i bez auta, sniž citlivost (posuň doprava). Když auto nezachytí, posuň doleva nebo zónu zvětši.</p>
+  </section>`:""}
+  <section class="card">
+    ${toggle("cam.auto",c.auto,"Počítat kola kamerou","Když je kamera zapnutá. Klepání na displej funguje vždy jako záloha.")}
+  </section>`;
+}
+
+function viewRecords(){
+  const rs=S.races;
+  if(!rs.length)return `<div class="empty">Zatím žádné závody. Rekordy a historie se objeví po prvním dojetém závodě.</div>`;
+  const laneRec=[0,1].map(i=>{let best=null;for(const r of rs){const l=r.lanes[i];if(!l)continue;l.laps.forEach(t=>{if(best==null||t<best.t)best={t,name:l.name,at:r.at}})}return best});
+  const per={};
+  for(const r of rs)r.lanes.forEach((l,i)=>{const k=l.driverId||`car${i}`;const p=per[k]||(per[k]={name:l.driverId?(driverName(l.driverId)||l.name):S.settings.cars[i],n:0,w:0,best:null,laps:0});p.n++;if(r.winnerLane===i)p.w++;p.laps+=l.laps.length;l.laps.forEach(t=>{if(p.best==null||t<p.best)p.best=t})});
+  const prs=Object.values(per).sort((a,b)=>(a.best??1e12)-(b.best??1e12));
+  return `
+  <section class="card"><h2>Rekordy drah</h2><div class="list">${laneRec.map((b,i)=>`<div><span class="chip l${i}">${LANE_LABEL[i]}</span><div class="grow">${b?`<b class="num" style="font:800 26px/1 var(--f-display)">${fmtLap(b.t)} s</b><div class="hint ellip">${esc(b.name)} · ${fmtDate(b.at)}</div>`:`<span class="hint">zatím nic</span>`}</div></div>`).join("")}</div></section>
+  <section class="card"><h2>Jezdci</h2><div class="tblwrap"><table><thead><tr><th>Jezdec</th><th class="r">Závody</th><th class="r">Výhry</th><th class="r">Kola</th><th class="r">Nejl. kolo</th></tr></thead>
+  <tbody>${prs.map(p=>`<tr><td>${esc(p.name)}</td><td class="r">${p.n}</td><td class="r">${p.w}</td><td class="r">${p.laps}</td><td class="r">${fmtLap(p.best)}</td></tr>`).join("")}</tbody></table></div></section>
+  <section class="card"><h2>Historie</h2><div class="list">${rs.slice(0,60).map(r=>`<div style="display:block"><details><summary>${raceRow(r).replace(/^<div>|<\/div>$/g,"")}</summary>${lapTable(r)}
+    <div class="row" style="margin-top:8px">${ui.confirm===`dr:${r.id}`?`<button class="btn small danger" data-act="delRace" data-id="${r.id}">Smazat závod</button><button class="btn small ghost" data-act="cancelAsk">Ne</button>`:`<button class="btn small ghost" data-act="ask" data-key="dr:${r.id}">Smazat</button>`}</div></details></div>`).join("")}</div></section>`;
+}
+function lapTable(r){
+  const max=Math.max(...r.lanes.map(l=>l.laps.length),0);if(!max)return "";
+  const pb=r.lanes.map(l=>l.laps.length?Math.min(...l.laps):null);
+  let rows="";for(let k=0;k<max;k++)rows+=`<tr><td>${k+1}</td>${r.lanes.map((l,i)=>{const t=l.laps[k];return `<td class="r ${t==null?"":t===r.fastest?"fl":t===pb[i]?"pb":""}">${t==null?"":fmtLap(t)}</td>`}).join("")}</tr>`;
+  return `<div class="tblwrap"><table><thead><tr><th>Kolo</th>${r.lanes.map((l,i)=>`<th class="r"><span class="dot l${i}"></span>${esc(l.name)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function viewSettings(){
+  const st=S.settings;
+  return `
+  <section class="card"><h3>Jezdci</h3>
+    ${S.drivers.length?`<div class="list">${S.drivers.map(d=>`<div><span class="grow ellip">${esc(d.name)}</span>${ui.confirm===`dd:${d.id}`?`<button class="btn small danger" data-act="delDriver" data-id="${d.id}">Smazat</button><button class="btn small ghost" data-act="cancelAsk">Ne</button>`:`<button class="btn small ghost" data-act="ask" data-key="dd:${d.id}" aria-label="Smazat ${esc(d.name)}">✕</button>`}</div>`).join("")}</div>`:`<p class="hint">Přidej jména, ať se pořadí a rekordy ukládají ke každému jezdci.</p>`}
+    ${addDriverForm("drvAdd")}
+  </section>
+  <section class="card"><h3>Auta</h3>
+    <label class="lanepick"><span class="chip l0">Dráha 1</span><input type="text" id="car0" data-car="0" value="${esc(st.cars[0])}" maxlength="20"></label>
+    <label class="lanepick"><span class="chip l1">Dráha 2</span><input type="text" id="car1" data-car="1" value="${esc(st.cars[1])}" maxlength="20"></label>
+  </section>
+  <section class="card"><h3>Závod</h3>
+    <div class="row spread"><span>Nejkratší možné kolo<small class="hint" style="display:block">rychlejší průjezd se ignoruje (dvojí klepnutí, odraz)</small></span>${stepper("minLap",String(st.minLap).replace(".",","),"s")}</div>
+    ${toggle("jumpPenalty",st.jumpPenalty,"Trest za ulitý start","−1 kolo. Během červených světel klepni na dráhu, která vyrazila dřív (kamera to pozná sama).")}
+    ${toggle("sound",st.sound,"Zvuky","pípání startu a průjezdů")}
+    ${toggle("voice",st.voice,"Hlasová hlášení","poslední kolo a vítěz")}
+    ${toggle("mirror",st.mirror,"Dráha 2 vlevo, dráha 1 vpravo","rozložení displeje během závodu, jako když stojíš u startu")}
+  </section>
+  <section class="card"><h3>Záloha dat</h3>
+    <p class="hint">Data jsou uložená jen v tomto telefonu, v prohlížeči. Občas si stáhni zálohu.</p>
+    <div class="row"><button class="btn" data-act="export">Stáhnout zálohu</button><label class="btn" for="importFile">Nahrát zálohu</label><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+  </section>`;
+}
+
+/* ---------- actions ---------- */
+const A={
+  tab(el){ui.tab=el.dataset.tab;ui.confirm=null;render(true);scrollTo(0,0)},
+  ask(el){ui.confirm=el.dataset.key;render(true)},
+  cancelAsk(){ui.confirm=null;render(true)},
+  mode(el){const v=el.dataset.v;if(el.dataset.scope==="tf")ui.tf.mode=v;else{S.settings.mode=v;save()}render(true)},
+  step(el){
+    const k=el.dataset.key,d=+el.dataset.d,st=S.settings,f=ui.tf;
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    if(k==="laps")st.laps=clamp(st.laps+d,1,99);
+    else if(k==="minutes")st.minutes=clamp(st.minutes+d,1,30);
+    else if(k==="tflaps")f.laps=clamp(f.laps+d,1,99);
+    else if(k==="tfminutes")f.minutes=clamp(f.minutes+d,1,30);
+    else if(k==="legs")f.legs=clamp(f.legs+d,1,4);
+    else if(k==="minLap")st.minLap=clamp(Math.round((st.minLap+d*.5)*10)/10,.5,10);
+    save();render(true);
+  },
+  toggle(el){const k=el.dataset.key;if(k==="cam.auto")S.settings.cam.auto=!S.settings.cam.auto;else S.settings[k]=!S.settings[k];save();render(true)},
+  swapSetup(){S.setup=[S.setup[1],S.setup[0]];save();render(true)},
+  startRace(){const st=S.settings;openRace({lanes:[S.setup[0],S.setup[1]],mode:st.mode,laps:st.laps,minutes:st.minutes})},
+  playMatch(el){const t=S.tournaments.find(x=>x.id===el.dataset.t),m=t?.matches.find(x=>x.id===el.dataset.m);if(!m)return;
+    openRace({lanes:[m.l1,m.l2],mode:t.mode,laps:t.laps,minutes:t.minutes,tournamentId:t.id,matchId:m.id})},
+  tfOpen(){ui.tf.open=true;render(true)},
+  tfClose(){ui.tf.open=false;render(true)},
+  tfPlayer(el){const p=ui.tf.players,i=p.indexOf(el.dataset.id);i<0?p.push(el.dataset.id):p.splice(i,1);render(true)},
+  createTour(){
+    const f=ui.tf;if(f.players.length<2)return;
+    const t={id:uid(),name:f.name.trim()||`Turnaj ${new Date().toLocaleDateString("cs-CZ")}`,created:Date.now(),players:[...f.players],legs:f.legs,mode:f.mode,laps:f.laps,minutes:f.minutes,matches:buildMatches(f.players,f.legs)};
+    S.tournaments.push(t);save();ui.tf={open:false,name:"",players:[],legs:f.legs,mode:f.mode,laps:f.laps,minutes:f.minutes};ui.tourOpen=t.id;render(true);scrollTo(0,0);
+  },
+  openTour(el){ui.tourOpen=el.dataset.id;ui.confirm=null;render(true);scrollTo(0,0)},
+  closeTour(){ui.tourOpen=null;ui.confirm=null;render(true)},
+  delTour(el){S.tournaments=S.tournaments.filter(t=>t.id!==el.dataset.id);ui.tourOpen=null;ui.confirm=null;save();render(true)},
+  resetMatch(el){const t=S.tournaments.find(x=>x.id===el.dataset.t),m=t?.matches.find(x=>x.id===el.dataset.m);if(m){m.res=null;m.raceId=null;save()}ui.confirm=null;render(true)},
+  delDriver(el){const id=el.dataset.id;S.drivers=S.drivers.filter(d=>d.id!==id);S.setup=S.setup.map(x=>x===id?"":x);ui.tf.players=ui.tf.players.filter(x=>x!==id);ui.confirm=null;save();render(true)},
+  delRace(el){const id=el.dataset.id;S.races=S.races.filter(r=>r.id!==id);for(const t of S.tournaments)for(const m of t.matches)if(m.raceId===id){m.res=null;m.raceId=null}ui.confirm=null;save();render(true)},
+  camStart(){Cam.start()},
+  camStop(){Cam.stop();render(true)},
+  camLane(el){ui.camLane=+el.dataset.v;render(true)},
+  camTestReset(){Cam.test=[0,0];render(true)},
+  export(){
+    const blob=new Blob([JSON.stringify({app:"osmicka",v:1,exported:new Date().toISOString(),...S},null,1)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`osmicka-zaloha-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+  },
+};
+document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el||el.disabled)return;A[el.dataset.act]?.(el,e)});
+document.addEventListener("submit",e=>{
+  const f=e.target;if(f.dataset.form!=="addDriver")return;e.preventDefault();
+  const name=f.querySelector("input").value.trim();if(!name)return;
+  const d={id:uid(),name};S.drivers.push(d);
+  if(f.querySelector("input").id==="tfAdd")ui.tf.players.push(d.id);
+  else if(!S.setup[0])S.setup[0]=d.id;else if(!S.setup[1]&&S.setup[0]!==d.id)S.setup[1]=d.id;
+  save();render(true);const inp=$("#"+f.querySelector("input").id);inp&&inp.focus();
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.setup!=null){S.setup[+t.dataset.setup]=t.value;save()}
+  else if(t.dataset.car!=null){S.settings.cars[+t.dataset.car]=t.value.trim()||DEF.cars[+t.dataset.car];save()}
+  else if(t.id==="importFile"&&t.files[0]){const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.app!=="osmicka")throw 0;S=normalize(d);saveNow();toast("Záloha nahrána.");render(true)}catch{toast("Tohle není záloha z Osmičky.")}};r.readAsText(t.files[0])}
+  else if(t.dataset.zone||t.dataset.thr!=null)render(true);
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.bind==="tfName")ui.tf.name=t.value;
+  else if(t.dataset.zone){S.settings.cam.zones[ui.camLane][t.dataset.zone]=+t.value/100;save();const lab=t.previousElementSibling?.querySelector(".hint");if(lab)lab.textContent=t.value+" %"}
+  else if(t.dataset.thr!=null){S.settings.cam.thr=+t.value;save();const lab=t.previousElementSibling?.querySelector(".hint");if(lab)lab.textContent=t.value+" %"}
+});
+
+/* ---------- camera lap detection ---------- */
+const Cam={
+  stream:null,running:false,error:"",test:[0,0],score:[0,0],z:[{},{}],W:160,H:120,lastDraw:0,
+  video:$("#camVideo"),ov:$("#camOv"),cv:document.createElement("canvas"),ctx:null,
+  async start(){
+    this.error="";audioInit();
+    try{
+      this.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:640},height:{ideal:480},frameRate:{ideal:60}}});
+      this.video.srcObject=this.stream;await this.video.play();
+      this.ctx=this.cv.getContext("2d",{willReadFrequently:true});
+      this.running=true;this.z=[{},{}];this.loop();
+    }catch(e){this.error=e&&e.name==="NotAllowedError"?"Přístup ke kameře byl zamítnut. Povol ho v nastavení prohlížeče pro tuto stránku.":"Kameru se nepodařilo spustit.";this.running=false}
+    camDot();render(true);
+  },
+  stop(){this.running=false;try{this.stream?.getTracks().forEach(t=>t.stop())}catch{}this.stream=null;this.video.srcObject=null;camDot()},
+  loop(){
+    /* one pass per camera frame (requestVideoFrameCallback), with a timer as a backup for browsers without it */
+    const v=this.video,run=()=>{if(!this.running)return;this.lastRun=performance.now();try{this.process(this.lastRun)}catch{}};
+    if(v.requestVideoFrameCallback){const step=()=>{if(!this.running)return;run();v.requestVideoFrameCallback(step)};v.requestVideoFrameCallback(step)}
+    clearInterval(this.iv);this.iv=setInterval(()=>{if(!this.running){clearInterval(this.iv);return}if(performance.now()-(this.lastRun||0)>40)run()},16);
+  },
+  process(now){
+    const v=this.video,vw=v.videoWidth,vh=v.videoHeight;if(!vw||v.readyState<2)return;
+    const W=this.W,H=Math.round(W*vh/vw);
+    if(this.cv.width!==W||this.cv.height!==H){this.cv.width=W;this.cv.height=H}
+    this.ctx.drawImage(v,0,0,W,H);
+    const img=this.ctx.getImageData(0,0,W,H).data,thr=S.settings.cam.thr;
+    for(let i=0;i<2;i++){
+      const z=S.settings.cam.zones[i];
+      const x0=Math.max(0,Math.round((z.x-z.w/2)*W)),x1=Math.min(W,Math.round((z.x+z.w/2)*W));
+      const y0=Math.max(0,Math.round((z.y-z.h/2)*H)),y1=Math.min(H,Math.round((z.y+z.h/2)*H));
+      const n=(x1-x0)*(y1-y0);if(n<4)continue;
+      const st=this.z[i],key=`${x0},${y0},${x1},${y1}`;
+      if(st.key!==key){st.key=key;st.bg=null;st.cur=new Float32Array(n);st.armed=true;st.hi=0}
+      let k=0,cnt=0;const cur=st.cur,bg=st.bg;
+      for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const p=(y*W+x)*4,l=(img[p]*77+img[p+1]*150+img[p+2]*29)>>8;cur[k]=l;if(bg&&Math.abs(l-bg[k])>28)cnt++;k++}
+      if(!bg){st.bg=Float32Array.from(cur);continue}
+      const score=cnt/n*100;this.score[i]=score;
+      const a=score<thr*.5?.08:.01;for(let j=0;j<n;j++)bg[j]+=(cur[j]-bg[j])*a;
+      if(score>=thr){
+        if(!st.hi)st.hi=now;
+        if(st.armed){st.armed=false;onDetect(i,now)}
+        if(now-st.hi>1500){st.bg=Float32Array.from(cur);st.hi=0}   /* something parked in the zone: accept it as background */
+      }else if(score<thr*.5){st.armed=true;st.hi=0}
+    }
+    this.draw();
+  },
+  draw(){
+    const box=CAMBOX;if(box.parentElement?.id==="camHold")return;
+    const r=box.getBoundingClientRect();if(!r.width)return;
+    const dpr=Math.min(2,devicePixelRatio||1),cw=Math.round(r.width*dpr),ch=Math.round(r.height*dpr);
+    if(this.ov.width!==cw||this.ov.height!==ch){this.ov.width=cw;this.ov.height=ch}
+    const g=this.ov.getContext("2d"),cols=[getCss("--l1"),getCss("--l2")],thr=S.settings.cam.thr;
+    g.clearRect(0,0,cw,ch);
+    S.settings.cam.zones.forEach((z,i)=>{
+      const x=(z.x-z.w/2)*cw,y=(z.y-z.h/2)*ch,w=z.w*cw,h=z.h*ch,hot=this.score[i]>=thr;
+      g.fillStyle=cols[i];g.globalAlpha=hot?.45:Math.min(.3,this.score[i]/thr*.3);g.fillRect(x,y,w,h);
+      g.globalAlpha=1;g.lineWidth=(ui.tab==="cam"&&ui.camLane===i&&!R?4:2.5)*dpr;g.strokeStyle=cols[i];g.strokeRect(x,y,w,h);
+      g.font=`700 ${13*dpr}px ${getCss("--f-display")}`;g.fillStyle=cols[i];g.fillText(String(i+1),x+4*dpr,y-5*dpr<10*dpr?y+h+14*dpr:y-5*dpr);
+    });
+    for(let i=0;i<2;i++){const b=$("#bar"+i);if(b)b.style.width=Math.min(100,this.score[i]*2)+"%"}
+  },
+};
+const cssCache={};function getCss(n){return cssCache[n]||(cssCache[n]=getComputedStyle(document.documentElement).getPropertyValue(n).trim())}
+function camDot(){const d=$("#camDot");d.classList.toggle("on",Cam.running);d.querySelector("span").textContent=Cam.running?(S.settings.cam.auto?"kamera počítá":"kamera zap."):"kamera vyp."}
+function placeCam(){
+  const box=CAMBOX,slot=R&&!$("#race").hidden?(S.settings.cam.auto&&Cam.running?$("#raceCam"):null):$("#camSlot");
+  $("#raceCam").hidden=!(R&&Cam.running&&S.settings.cam.auto);
+  (slot||$("#camHold")).appendChild(box);
+  if(Cam.running&&Cam.video.paused)Cam.video.play().catch(()=>{});
+}
+function onDetect(i,now){
+  if(R&&S.settings.cam.auto){if(R.phase==="racing")laneHit(i,now,true);else if(R.phase==="lights")jumpStart(i);return}
+  if(!R){Cam.test[i]++;const c=$("#cnt"+i);if(c){c.textContent=Cam.test[i];const m=$("#meter"+i);m.classList.remove("flash");void m.offsetWidth;m.classList.add("flash");setTimeout(()=>m.classList.remove("flash"),300)}beep(1400,.05,"sine",.1)}
+}
+/* place a zone by tapping/dragging on the camera picture */
+(()=>{const box=CAMBOX;let drag=false;
+  const put=e=>{const r=box.getBoundingClientRect(),z=S.settings.cam.zones[ui.camLane];z.x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));z.y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));};
+  box.addEventListener("pointerdown",e=>{if(R||ui.tab!=="cam")return;drag=true;box.setPointerCapture(e.pointerId);put(e)});
+  box.addEventListener("pointermove",e=>{if(drag)put(e)});
+  box.addEventListener("pointerup",()=>{if(drag){drag=false;save()}});
+  box.addEventListener("pointercancel",()=>{drag=false});
+})();
+
+/* ---------- race ---------- */
+let R=null,raf=0,wake=null;
+const pen=L=>L.jump&&S.settings.jumpPenalty?1:0;
+const eff=L=>L.crossings.length-pen(L);
+const lastT=L=>L.crossings.length?L.crossings[L.crossings.length-1]:Infinity;
+const lapsOf=L=>L.crossings.map((t,k)=>t-(k?L.crossings[k-1]:0));
+function ranking(){
+  return [...R.lanes].sort((a,b)=>{
+    if(a.finishedAt!=null||b.finishedAt!=null){if(a.finishedAt==null)return 1;if(b.finishedAt==null)return -1;return a.finishedAt-b.finishedAt}
+    return eff(b)-eff(a)||lastT(a)-lastT(b);
+  });
+}
+function openRace(o){
+  audioInit();
+  R={id:uid(),mode:o.mode,laps:o.laps,minutes:o.minutes,durMs:o.minutes*60000,tournamentId:o.tournamentId||null,matchId:o.matchId||null,phase:"ready",t0:0,timers:[],
+     lanes:[0,1].map(i=>({i,driverId:o.lanes[i]||"",name:laneName(i,o.lanes[i]),crossings:[],jump:false,finishedAt:null,place:null,last:"",lastCls:""}))};
+  const race=$("#race");race.hidden=false;document.body.classList.add("racing");
+  $("#results").hidden=true;$("#raceConfirm").hidden=true;
+  const t=R.tournamentId&&S.tournaments.find(x=>x.id===R.tournamentId);
+  $("#raceInfo").innerHTML=`<b>${R.mode==="laps"?`${R.laps} ${kol(R.laps)}`:`${R.minutes} min`}</b>${t?esc(t.name):"Volný závod"}`;
+  $("#clock").textContent=R.mode==="time"?fmtClock(R.durMs):"0:00,0";
+  lights(0);buildLanes();bottom();placeCam();
+  requestWake();
+}
+function buildLanes(){
+  const order=S.settings.mirror?[1,0]:[0,1];
+  $("#lanes").innerHTML=order.map(i=>`<div class="lane l${i}" data-lane="${i}" role="button" tabindex="0" aria-label="Průjezd cílem, ${LANE_LABEL[i]}"></div>`).join("");
+  R.lanes.forEach((_,i)=>drawLane(i));
+}
+function drawLane(i){
+  const L=R.lanes[i],el=$(`.lane[data-lane="${i}"]`);if(!el)return;
+  const e=eff(L),rk=ranking(),lead=rk[0],started=R.phase==="racing"||R.phase==="done";
+  let pos="",gap="";
+  if(started&&R.lanes.some(x=>x.crossings.length)){pos=`P${rk.indexOf(L)+1}`;
+    if(L!==lead){const d=eff(lead)-e;if(d>=1)gap=`+${d} ${kol(d)}`;else if(e>0){const a=L.crossings[e-1+pen(L)],b=lead.crossings[e-1+pen(lead)];if(a!=null&&b!=null)gap=`+${fmtLap(a-b)} s`}}}
+  const best=L.crossings.length?Math.min(...lapsOf(L)):null;
+  el.classList.toggle("done",L.finishedAt!=null);
+  el.innerHTML=`<div class="lane-head"><b>${LANE_LABEL[i]}</b><span>${esc(L.name)}</span></div>
+    <div class="lane-pos num">${L.finishedAt!=null?`CÍL · ${L.place}.`:pos}${gap?` <small style="font-size:15px">${gap}</small>`:""}</div>
+    <div class="lane-count">${e}${R.mode==="laps"?`<small>/${R.laps}</small>`:""}</div>
+    <div class="lane-last ${L.lastCls}">${L.last?L.last+" s":""}</div>
+    <div class="lane-meta">${best!=null?`nejlepší ${fmtLap(best)} s`:R.phase==="ready"?"čeká na start":"&nbsp;"}</div>
+    ${L.jump?`<div class="lane-tag">Ulitý start${S.settings.jumpPenalty?" −1":""}</div>`:""}
+    ${R.phase==="racing"&&L.crossings.length?`<button class="lane-undo" data-undo="${i}">↶ Vrátit kolo</button>`:""}`;
+}
+function lights(n,green){document.querySelectorAll("#lights span").forEach((s,k)=>{s.classList.toggle("on",!green&&k<n);s.classList.toggle("green",!!green)})}
+function bottom(){
+  const b=$("#raceBottom");
+  if(R.phase==="ready")b.innerHTML=`<button class="go-btn" data-ract="go">Start</button>`;
+  else if(R.phase==="lights")b.innerHTML=`<div class="race-msg">Připravit…</div>`;
+  else if(R.phase==="racing")b.innerHTML=`<button class="btn" data-ract="finish">Ukončit závod</button>`;
+  else b.innerHTML="";
+}
+function runLights(){
+  audioInit();R.phase="lights";bottom();lights(0);
+  for(let k=0;k<5;k++)R.timers.push(setTimeout(()=>{lights(k+1);beep(440,.22,"square",.12)},500+k*900));
+  R.timers.push(setTimeout(go,500+4*900+800+Math.random()*2200));
+}
+function go(){
+  R.phase="racing";R.t0=performance.now();lights(0,true);beep(880,.6,"square",.16);buzz(80);
+  R.timers.push(setTimeout(()=>{if(R&&R.phase==="racing")lights(0)},1200));
+  bottom();R.lanes.forEach((_,i)=>drawLane(i));tick();
+}
+function jumpStart(i){const L=R.lanes[i];if(L.jump)return;L.jump=true;beep(150,.5,"sawtooth",.15);buzz(200);drawLane(i)}
+function tick(){
+  cancelAnimationFrame(raf);
+  const f=()=>{if(!R||R.phase!=="racing")return;const el=performance.now()-R.t0;
+    if(R.mode==="time"){const rem=R.durMs-el;$("#clock").textContent=fmtClock(rem);if(rem<=0){finalize();return}}
+    else $("#clock").textContent=fmtClock(el);
+    raf=requestAnimationFrame(f)};
+  raf=requestAnimationFrame(f);
+}
+function flashLane(i,cls){const el=$(`.lane[data-lane="${i}"]`);if(!el)return;el.classList.remove("hit","ign");void el.offsetWidth;el.classList.add(cls)}
+function laneHit(i,at,fromCam){
+  const L=R.lanes[i];if(L.finishedAt!=null)return;
+  const t=(at??performance.now())-R.t0,prev=L.crossings.length?L.crossings[L.crossings.length-1]:0;
+  if(t-prev<S.settings.minLap*1000){if(!fromCam)flashLane(i,"ign");return}
+  const lap=t-prev,allLaps=R.lanes.flatMap(lapsOf),myLaps=lapsOf(L);
+  L.crossings.push(t);
+  const fastest=!allLaps.length||lap<Math.min(...allLaps),pb=!myLaps.length||lap<Math.min(...myLaps);
+  L.last=fmtLap(lap);L.lastCls=fastest&&allLaps.length?"fl":pb&&myLaps.length?"pb":"";
+  const e=eff(L);
+  if(R.mode==="laps"&&e>=R.laps){
+    L.finishedAt=t;L.place=R.lanes.filter(x=>x.finishedAt!=null).length;
+    if(L.place===1){beep(660,.15,"square",.14);beep(880,.15,"square",.14,.16);beep(1320,.4,"square",.14,.32);say(`Vítězí ${L.name}`)}else beep(660,.3,"square",.12);
+    buzz([60,40,60]);
+    if(R.lanes.every(x=>x.finishedAt!=null))R.timers.push(setTimeout(()=>{if(R&&R.phase==="racing"&&R.lanes.every(x=>x.finishedAt!=null))finalize()},1200));
+  }else{
+    beep(L.lastCls==="fl"?1600:1200,.06,"sine",.12);buzz(20);
+    if(R.mode==="laps"&&e===R.laps-1&&!R.lanes.some(x=>x.finishedAt!=null))say(`${L.name}, poslední kolo`);
+  }
+  flashLane(i,"hit");R.lanes.forEach((_,k)=>drawLane(k));
+}
+function undo(i){
+  const L=R.lanes[i];if(!L.crossings.length)return;
+  L.crossings.pop();L.last="";L.lastCls="";
+  if(L.finishedAt!=null){L.finishedAt=null;L.place=null;R.lanes.filter(x=>x.finishedAt!=null).sort((a,b)=>a.finishedAt-b.finishedAt).forEach((x,k)=>x.place=k+1)}
+  buzz(30);R.lanes.forEach((_,k)=>drawLane(k));
+}
+function finalize(){
+  if(!R||R.phase==="done")return;
+  R.phase="done";R.timers.forEach(clearTimeout);cancelAnimationFrame(raf);lights(0);bottom();
+  const rk=ranking(),W=rk[0];
+  const lanes=R.lanes.map(L=>({driverId:L.driverId,name:L.name,laps:lapsOf(L),jump:L.jump,eff:eff(L),finished:L.finishedAt!=null,total:L.crossings.length?L.crossings[L.crossings.length-1]:null}));
+  const all=lanes.flatMap((l,i)=>l.laps.map(t=>({t,i})));
+  if(!all.length||eff(W)<=0){showResults(null);return}
+  const f=all.reduce((a,b)=>b.t<a.t?b:a);
+  const race={id:R.id,at:Date.now(),mode:R.mode,target:R.mode==="laps"?R.laps:R.minutes,tournamentId:R.tournamentId,matchId:R.matchId,lanes,winnerLane:W.i,order:rk.map(x=>x.i),fastest:f.t,fastestLane:f.i};
+  S.races.unshift(race);
+  if(R.tournamentId){const t=S.tournaments.find(x=>x.id===R.tournamentId),m=t?.matches.find(x=>x.id===R.matchId);
+    if(m){const best={};lanes.forEach(l=>{if(l.driverId&&l.laps.length)best[l.driverId]=Math.min(...l.laps)});
+      m.res={winner:lanes[W.i].driverId,fastest:lanes[f.i].driverId,best};m.raceId=race.id}}
+  saveNow();showResults(race);render(true);
+}
+function showResults(race){
+  const s=$("#results");s.hidden=false;releaseWake();
+  const t=R.tournamentId&&S.tournaments.find(x=>x.id===R.tournamentId),nm=t&&nextMatch(t);
+  if(!race){s.innerHTML=`<div class="sheet-in"><div class="winner"><small>Závod bez výsledku</small><b>Žádné kolo</b></div><p class="hint" style="text-align:center">Nikdo neprojel cílem, nic se neuložilo.</p><button class="go-btn" data-ract="again">Znovu na start</button><button class="btn" data-ract="done">Zavřít</button></div>`;return}
+  const w=race.lanes[race.winnerLane];
+  const rows=race.order.map((i,p)=>{const l=race.lanes[i],best=l.laps.length?Math.min(...l.laps):null;
+    return `<tr><td class="pos">${p+1}</td><td><span class="dot l${i}"></span>${esc(l.name)}${l.jump?` <span class="hint">(ulitý start)</span>`:""}</td><td class="r">${l.eff}</td><td class="r">${l.total!=null?fmtClock(l.total):"–"}</td><td class="r ${i===race.fastestLane?"fl":""}">${fmtLap(best)}</td></tr>`}).join("");
+  s.innerHTML=`<div class="sheet-in">
+    <div class="winner"><small>Vítěz · ${LANE_LABEL[race.winnerLane]}</small><b style="color:var(--${race.winnerLane?"l2":"l1"})">${esc(w.name)}</b></div>
+    <section class="card"><div class="tblwrap"><table><thead><tr><th></th><th>Jezdec</th><th class="r">Kola</th><th class="r">Čas</th><th class="r">Nejl. kolo</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="hint">Nejrychlejší kolo: <b class="fl">${fmtLap(race.fastest)} s</b> (${esc(race.lanes[race.fastestLane].name)})${t?` · +${PTS_FL} bod do turnaje`:""}</p></section>
+    <section class="card"><h2>Kolo po kole</h2>${lapTable(race)}</section>
+    ${t?(nm?`<button class="go-btn" data-ract="next">Další závod: ${esc(driverName(nm.l1))} vs ${esc(driverName(nm.l2))}</button>`:`<div class="champ"><h2>Turnaj dokončen</h2><b>${esc(driverName(standings(t)[0]?.id))}</b></div>`)+`<button class="btn" data-ract="toTour">Pořadí turnaje</button>`
+      :`<button class="go-btn" data-ract="rematch">Odveta s prohozenými drahami</button><button class="btn" data-ract="again">Znovu stejně</button><button class="btn ghost" data-ract="done">Zavřít</button>`}
+  </div>`;
+  s.scrollTop=0;
+}
+function closeRace(){
+  if(R){R.timers.forEach(clearTimeout);cancelAnimationFrame(raf)}
+  R=null;$("#race").hidden=true;$("#raceConfirm").hidden=true;document.body.classList.remove("racing");releaseWake();try{speechSynthesis.cancel()}catch{}
+  render(true);
+}
+async function requestWake(){try{wake=await navigator.wakeLock?.request("screen")}catch{wake=null}}
+function releaseWake(){try{wake?.release()}catch{}wake=null}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&R&&R.phase!=="done")requestWake()});
+
+const RA={
+  go(){runLights()},
+  finish(){finalize()},
+  close(){if(R.phase==="done"||(R.phase==="ready"))closeRace();else $("#raceConfirm").hidden=false},
+  keep(){$("#raceConfirm").hidden=true},
+  abort(){closeRace()},
+  done(){closeRace()},
+  again(){const o=R;closeRace();openRace({lanes:o.lanes.map(l=>l.driverId),mode:o.mode,laps:o.laps,minutes:o.minutes})},
+  rematch(){const o=R;closeRace();openRace({lanes:[o.lanes[1].driverId,o.lanes[0].driverId],mode:o.mode,laps:o.laps,minutes:o.minutes})},
+  next(){const tid=R.tournamentId;closeRace();const t=S.tournaments.find(x=>x.id===tid),m=t&&nextMatch(t);if(m)openRace({lanes:[m.l1,m.l2],mode:t.mode,laps:t.laps,minutes:t.minutes,tournamentId:t.id,matchId:m.id})},
+  toTour(){const tid=R.tournamentId;closeRace();ui.tab="tour";ui.tourOpen=tid;render(true);scrollTo(0,0)},
+};
+$("#race").addEventListener("pointerdown",e=>{
+  if(!R)return;
+  const u=e.target.closest("[data-undo]");if(u){e.preventDefault();e.stopPropagation();undo(+u.dataset.undo);return}
+  const lane=e.target.closest("[data-lane]");if(!lane)return;e.preventDefault();
+  const i=+lane.dataset.lane;
+  if(R.phase==="lights")jumpStart(i);else if(R.phase==="racing")laneHit(i);
+});
+$("#race").addEventListener("click",e=>{const b=e.target.closest("[data-ract]");if(b&&R)RA[b.dataset.ract]?.()});
+document.addEventListener("keydown",e=>{
+  if(!R||$("#race").hidden||e.repeat)return;
+  const m={"1":0,"2":1,ArrowRight:S.settings.mirror?0:1,ArrowLeft:S.settings.mirror?1:0}[e.key];
+  if(m!=null){e.preventDefault();if(R.phase==="lights")jumpStart(m);else if(R.phase==="racing")laneHit(m)}
+  else if((e.key===" "||e.key==="Enter")&&R.phase==="ready"){e.preventDefault();runLights()}
+});
+
+render(true);camDot();
+</script>
+</body>
+</html>
