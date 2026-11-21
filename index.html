@@ -345,7 +345,7 @@ const BADGES=[
   {id:"rec",m:"REK",n:"Rekordman",d:"Drž rekord kola na některé trati"},
   {id:"photo",m:"0,3",n:"Fotofiniš",d:"Vyhraj o méně než 0,3 s"},
   {id:"obrat",m:"↺",n:"Obrat",d:"Vyhraj závod, ve kterém jsi v polovině prohrával"},
-  {id:"clock",m:"±5",n:"Hodinář",d:"Odjeď 5+ kol, všechna do 5 % od nejlepšího"},
+  {id:"clock",m:"±5",n:"Hodinář",d:"Odjeď závod na 5+ kol a měj všechna kola (kromě prvního) do 5 % od nejlepšího"},
   {id:"clean",m:"10",n:"Čistý start",d:"10 závodů v řadě bez ulitého startu",goal:10,k:"clean"},
   {id:"jump",m:"!",n:"Ukvapenec",d:"Ulij start"},
   {id:"champ",m:"T",n:"Šampion",d:"Vyhraj turnaj"},
@@ -364,7 +364,7 @@ function driverStats(id){
     if(L.jump){st.jump=true;st.clean=0}else{st.clean++;st.cleanBest=Math.max(st.cleanBest,st.clean)}
     if(won&&r.mode==="laps"&&L.finished&&o&&o.finished&&o.total-L.total<300)st.photo=true;
     if(won&&o&&L.total){const half=L.total/2,c=a=>{let s=0,n=0;for(const t of a){s+=t;if(s<=half)n++}return n};if(c(o.laps)>c(L.laps))st.obrat=true}
-    if(L.laps.length>=6){const ls=L.laps.slice(1),mn=Math.min(...ls);if(Math.max(...ls)<=mn*1.05)st.clock=true}
+    if(L.laps.length>=5){const ls=L.laps.slice(1),mn=Math.min(...ls);if(Math.max(...ls)<=mn*1.05)st.clock=true}
   }
   const recs={};for(const r of S.races){r.lanes.forEach(l=>{if(!l.driverId)return;const k=r.track||"?";for(const t of l.laps)if(!recs[k]||t<recs[k].t)recs[k]={t,id:l.driverId}})}
   st.rec=Object.values(recs).some(x=>x.id===id);
@@ -534,7 +534,7 @@ function viewCam(){
   return `
   <section class="card">
     <h3>Počítání kol kamerou</h3>
-    <p class="hint">Telefon upevni nad cílovou rovinku zadní kamerou dolů (stojan, lampa, police). Na obraze pak pro každou dráhu umísti zónu kousek <b>za startovní čáru</b>, aby v ní auta na startu nestála. Když zónou projede auto, kolo se započítá.</p>
+    <p class="hint">Telefon upevni nad cílovou rovinku zadní kamerou dolů (stojan, lampa, police). Na obraze pak pro každou dráhu umísti zónu kousek <b>za startovní čáru</b>, aby v ní auta na startu nestála. Potom kameru nauč barvu obou aut. Když zónou projede auto své barvy, kolo se započítá.</p>
     ${secure?(Cam.running
       ?`<button class="btn" data-act="camStop">Vypnout kameru</button>`
       :`<button class="go-btn" data-act="camStart">Zapnout kameru</button>`)
