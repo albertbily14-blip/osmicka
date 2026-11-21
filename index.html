@@ -131,7 +131,7 @@ details summary::-webkit-details-marker{display:none}
 .meter.flash .cnt{color:var(--go)}
 
 /* tab bar */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));z-index:5}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));z-index:5}
 nav.tabs button{background:none;border:0;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:12px;font-weight:600}
 nav.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
 nav.tabs button[aria-current=page]{color:var(--fg)}
@@ -184,6 +184,38 @@ nav.tabs button[aria-current=page]{color:var(--fg)}
   .lane-count{font-size:clamp(48px,16vh,120px)}
 }
 @media (prefers-reduced-motion:reduce){.lane.hit,.lane.ign{animation:none}}
+
+/* tracks */
+:root{--track:#353b45;--track-edge:#4a5260}
+.trk{display:block;width:100%;height:auto}
+.trk .body{stroke:var(--track);fill:none;stroke-linecap:butt;stroke-linejoin:round}
+.trk .edge{stroke:var(--track-edge);fill:none}
+.trk .ln0{stroke:var(--l1);fill:none} .trk .ln1{stroke:var(--l2);fill:none}
+.trk .startA{fill:var(--fg)} .trk .startB{fill:var(--bg)} .trk .dir{fill:var(--fg)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.tcard{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:6px;text-align:left;min-width:0}
+.tcard[aria-current=true]{border-color:var(--fg)}
+.tcard b{font:700 17px/1.1 var(--f-display);letter-spacing:.02em}
+.tcard .hint{font-size:12.5px}
+.tag{display:inline-block;font:700 11px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:4px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.tag.fair{color:var(--go);border-color:color-mix(in srgb,var(--go) 45%,var(--line))}
+.tag.miss{color:var(--l1);border-color:color-mix(in srgb,var(--l1) 40%,var(--line))}
+.inv{display:grid;grid-template-columns:1fr auto;gap:10px 12px;align-items:center}
+input[type=number]{width:96px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:16px;text-align:right}
+.swatch{width:34px;height:34px;border-radius:8px;border:2px solid var(--line);flex:none}
+
+/* badges */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.badge{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;padding:10px 6px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--line);min-width:0}
+.badge .medal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:800 15px/1 var(--f-display);letter-spacing:.02em;background:var(--line);color:var(--muted);border:3px solid var(--surface)}
+.badge.got .medal{background:radial-gradient(circle at 35% 30%,#fff3b0,var(--l1) 55%,#a37e00);color:var(--ink);box-shadow:0 0 0 2px color-mix(in srgb,var(--l1) 40%,transparent)}
+.badge b{font:700 13px/1.15 var(--f-display);letter-spacing:.03em}
+.badge span{font-size:11.5px;color:var(--muted);line-height:1.25}
+.badge:not(.got){opacity:.62}
+.newbadge{display:flex;gap:10px;align-items:center;padding:10px;border-radius:var(--r);background:color-mix(in srgb,var(--l1) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--l1) 40%,var(--line))}
+.newbadge .medal{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:800 13px/1 var(--f-display);background:radial-gradient(circle at 35% 30%,#fff3b0,var(--l1) 55%,#a37e00);color:var(--ink);flex:none}
+.drvbadges{display:flex;flex-direction:column;gap:10px}
+.drvbadges summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0}
 </style>
 </head>
 <body>
@@ -198,8 +230,9 @@ nav.tabs button[aria-current=page]{color:var(--fg)}
   <button data-act="tab" data-tab="race"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>Závod</button>
   <button data-act="tab" data-tab="tour"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/></svg>Turnaj</button>
   <button data-act="tab" data-tab="cam"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Kamera</button>
+  <button data-act="tab" data-tab="tracks"><svg viewBox="0 0 24 24"><path d="M12 12c-2.6-3.6-8-3.6-8 0s5.4 3.6 8 0 8-3.6 8 0-5.4 3.6-8 0z"/></svg>Tratě</button>
   <button data-act="tab" data-tab="records"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 2h4"/></svg>Rekordy</button>
-  <button data-act="tab" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 5.6M18 14.5c1.9.8 3 2.8 3 5.5"/></svg>Jezdci</button>
+  <button data-act="tab" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 5.6M18 14.5c1.9.8 3 2.8 3 5.5"/></svg>Garáž</button>
 </nav>
 
 <div id="camHold"><div id="camBox"><video id="camVideo" playsinline muted autoplay></video><canvas id="camOv"></canvas></div></div>
@@ -239,16 +272,22 @@ const PTS_WIN=3, PTS_FL=1;
 
 /* ---------- state & storage (this device) ---------- */
 const DEF={minLap:1.5,jumpPenalty:true,sound:true,voice:true,mirror:true,cars:["Žlutá #53","Modrá #24"],mode:"laps",laps:10,minutes:3,
-  cam:{auto:true,thr:12,zones:[{x:.62,y:.5,w:.16,h:.16},{x:.38,y:.5,w:.16,h:.16}]}};
+  cam:{auto:true,method:"color",thr:12,thrC:12,tol:20,mask:false,zones:[{x:.62,y:.5,w:.16,h:.16},{x:.38,y:.5,w:.16,h:.16}],
+    col:[{h:47,s:.9,v:.92,rgb:[240,190,24]},{h:205,s:.58,v:.88,rgb:[95,170,225]}]},
+  track:{c:12,s:3,x:1,cur:"SLLLLLLSXSRRRRRRSX",lcm:0,scale:43}};
 const LS="osmicka.v1";
 let S=load();
 function normalize(s){
   s=s&&typeof s==="object"?s:{};
   const st={...DEF,...(s.settings||{})};
   st.cam={...DEF.cam,...(st.cam||{})};
+  st.track={...DEF.track,...(st.track||{})};
   if(!Array.isArray(st.cam.zones)||st.cam.zones.length!==2) st.cam.zones=JSON.parse(JSON.stringify(DEF.cam.zones));
+  if(!Array.isArray(st.cam.col)||st.cam.col.length!==2) st.cam.col=JSON.parse(JSON.stringify(DEF.cam.col));
   if(!Array.isArray(st.cars)||st.cars.length!==2) st.cars=[...DEF.cars];
-  return {drivers:Array.isArray(s.drivers)?s.drivers:[],settings:st,tournaments:Array.isArray(s.tournaments)?s.tournaments:[],races:Array.isArray(s.races)?s.races:[],setup:Array.isArray(s.setup)?s.setup:["",""]};
+  const races=Array.isArray(s.races)?s.races:[];
+  for(const r of races)if(!r.track)r.track=DEF.track.cur;   /* races from before tracks existed were on the boxed figure-8 */
+  return {drivers:Array.isArray(s.drivers)?s.drivers:[],settings:st,tournaments:Array.isArray(s.tournaments)?s.tournaments:[],races,setup:Array.isArray(s.setup)?s.setup:["",""]};
 }
 function load(){try{return normalize(JSON.parse(localStorage.getItem(LS)||"null"))}catch{return normalize(null)}}
 let saveT=0;
@@ -258,6 +297,89 @@ try{navigator.storage?.persist?.()}catch{}
 
 const driverName=id=>S.drivers.find(d=>d.id===id)?.name||"";
 const laneName=(i,id)=>driverName(id)||S.settings.cars[i];
+
+/* ---------- tracks: layouts that close with 45° curves (generated by tools/trate.mjs + tools/vyber.mjs) ---------- */
+/* s = pieces from the start straight: S straight, L/R 45° curve, X crossover (driven twice); a/b = lane 1/2 length in straights; z = footprint in straights */
+const TRACKS=[{"s":"SLLLLSLLLL","a":9.854,"b":12.996,"z":[5,4]},{"s":"SLLLLSSLLLLS","a":11.854,"b":14.996,"z":[6,4]},{"s":"SLLSLLSLLSLL","a":11.854,"b":14.996,"z":[5,5]},{"s":"SLLLSLSLLLSL","a":11.854,"b":14.996,"z":[5.71,4.71]},{"s":"SLLLLRLSLLLLRL","a":14.566,"b":17.708,"z":[7.12,4.88]},{"s":"SLLLRLLSLLLRLL","a":14.566,"b":17.708,"z":[6.12,5.88]},{"s":"SLLLLLRSLLLLLR","a":14.566,"b":17.708,"z":[7.12,4.88]},{"s":"SLLLLSSSLLLLSS","a":13.854,"b":16.996,"z":[7,4]},{"s":"SLLSLLSSLLSLLS","a":13.854,"b":16.996,"z":[6,5]},{"s":"SLLLSLSSLLLSLS","a":13.854,"b":16.996,"z":[6.71,4.71]},{"s":"SLLSLSLSLLSLSL","a":13.854,"b":16.996,"z":[5.71,5.71]},{"s":"SLLLLRLSSLLLLRLS","a":16.566,"b":19.708,"z":[8.12,4.88]},{"s":"SLLLRSLLSLLLRSLL","a":16.566,"b":19.708,"z":[7.12,5.88]},{"s":"SLLLLRSLSLLLLRSL","a":16.566,"b":19.708,"z":[7.83,5.59]},{"s":"SLLLRLSLSLLLRLSL","a":16.566,"b":19.708,"z":[6.83,6.59]},{"s":"SLLLLLRSSLLLLLRS","a":16.566,"b":19.708,"z":[8.12,4.88]},{"s":"SLLLLLLSXSRRRRRRSX","a":20.137,"b":20.137,"z":[7,7]},{"s":"SLLLLRLRLSLLLLRLRL","a":19.279,"b":22.42,"z":[9.24,5.76]},{"s":"SLLLRLRLLSLLLRLRLL","a":19.279,"b":22.42,"z":[8.24,6.76]},{"s":"SLLLLLRLRSLLLLLRLR","a":19.279,"b":22.42,"z":[9.24,5.76]},{"s":"SLLLRLLLRSLLLRLLLR","a":19.279,"b":22.42,"z":[8,7]},{"s":"SLLLLRLSLRLLLLLRRL","a":19.279,"b":22.42,"z":[9.24,4.88]},{"s":"SLLLLRLSSSLLLLRLSS","a":18.566,"b":21.708,"z":[9.12,4.88]},{"s":"SLLLRSSLLSLLLRSSLL","a":18.566,"b":21.708,"z":[8.12,5.88]},{"s":"SLLLRSLLSSLLLRSLLS","a":18.566,"b":21.708,"z":[7.12,6.88]},{"s":"SLLLRSLSLSLLLRSLSL","a":18.566,"b":21.708,"z":[7.83,6.59]},{"s":"SLLLLRSSLSLLLLRSSL","a":18.566,"b":21.708,"z":[8.54,6.29]},{"s":"SLLLLLLSXSRRSRRRRSSX","a":22.137,"b":22.137,"z":[8,7]},{"s":"SLLLLLLSXSRSRRRRSRSX","a":22.137,"b":22.137,"z":[7.71,7.71]},{"s":"SLLLLRLRLSSLLLLRLRLS","a":21.279,"b":24.42,"z":[10.24,5.76]},{"s":"SLLLRLRSLLSLLLRLRSLL","a":21.279,"b":24.42,"z":[9.24,6.76]},{"s":"SLLLRLLRLSSLLLRLLRLS","a":21.279,"b":24.42,"z":[9,7]},{"s":"SLLLRLRLLSSLLLRLRLLS","a":21.279,"b":24.42,"z":[8.24,7.76]},{"s":"SLLLRLRLSLSLLLRLRLSL","a":21.279,"b":24.42,"z":[8.95,7.46]},{"s":"SLLLLLLSXRLSRRRRRLRRSX","a":24.85,"b":24.85,"z":[9.12,7.88]},{"s":"SLLLLLLSXLRSRRRRLRRRSX","a":24.85,"b":24.85,"z":[9.12,7]},{"s":"SLLLLRLRLSSSLLLLRLRLSS","a":23.279,"b":26.42,"z":[11.24,5.76]},{"s":"SLLLRLRSSLLSLLLRLRSSLL","a":23.279,"b":26.42,"z":[10.24,6.76]},{"s":"SLLLRLLRLSSSLLLRLLRLSS","a":23.279,"b":26.42,"z":[10,7]},{"s":"SLLLLRLRSLSSLLLLRLRSLS","a":23.279,"b":26.42,"z":[10.95,6.46]},{"s":"SLLLRLRSLLSSLLLRLRSLLS","a":23.279,"b":26.42,"z":[9.24,7.76]},{"s":"SLLLLSLSXSRLRRRRRLRRSXSL","a":26.85,"b":26.85,"z":[11.36,4.88]},{"s":"SLLLLLLSXRLSSRRRRRLSRRSX","a":26.85,"b":26.85,"z":[10.12,7.88]},{"s":"SLLLLLLSXRLSRRSRRRLRRSSX","a":26.85,"b":26.85,"z":[9.12,8.88]},{"s":"SLLLLLLSXRLSRSRRRRLRSRSX","a":26.85,"b":26.85,"z":[9.83,8.59]}];
+const STD_TRACK="SLLLLLLSXSRRRRRRSX";
+const pieceCount=seq=>({c:(seq.match(/[LR]/g)||[]).length,s:(seq.match(/S/g)||[]).length-1,x:seq.includes("X")?1:0});
+const bendCount=seq=>{let n=0,last="";for(const ch of seq+seq)if(ch==="L"||ch==="R"){if(last&&ch!==last)n++;last=ch}return n/2};
+const TNAME=(()=>{const m={},cnt={};for(const t of TRACKS){const p=pieceCount(t.s);let base=p.x?"Osmička":bendCount(t.s)===0?"Ovál":p.c>=16?"Klikatice":"Ledvina";
+  if(t.s===STD_TRACK){m[t.s]="Osmička z krabice";continue}cnt[base]=(cnt[base]||0)+1;m[t.s]=`${base} ${cnt[base]}`}return m})();
+const trackName=seq=>seq?(TNAME[seq]||"Vlastní trať"):"Neznámá trať";
+const trackById=seq=>TRACKS.find(t=>t.s===seq);
+function trackSVG(seq,cls=""){
+  const RR=1.5,DD=.25,WW=.95,pts=[];let x=0,y=0,h=0;
+  for(const m of seq){const a0=h*Math.PI/4,n=m==="S"||m==="X"?4:6;
+    for(let k=0;k<=n;k++){const t=k/n;let px,py,a;
+      if(m==="S"||m==="X"){px=x+Math.cos(a0)*t;py=y+Math.sin(a0)*t;a=a0}
+      else{const s=m==="L"?1:-1;a=a0+s*t*Math.PI/4;const cx=x-s*RR*Math.sin(a0),cy=y+s*RR*Math.cos(a0);px=cx+s*RR*Math.sin(a);py=cy-s*RR*Math.cos(a)}
+      if(k>0||!pts.length)pts.push([px,py,a]);if(k===n){x=px;y=py}}
+    if(m==="L")h=(h+1)&7;else if(m==="R")h=(h+7)&7;}
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>-p[1]),pad=WW/2+.15;
+  const minx=Math.min(...xs)-pad,maxx=Math.max(...xs)+pad,miny=Math.min(...ys)-pad,maxy=Math.max(...ys)+pad;
+  const f=v=>v.toFixed(3);
+  const line=off=>"M"+pts.map(p=>`${f(p[0]-Math.sin(p[2])*off)} ${f(-(p[1]+Math.cos(p[2])*off))}`).join("L")+"Z";
+  /* start line across the middle of the first straight, plus a direction arrow */
+  const sx=.5,sy=0,ck=[];for(let i=0;i<6;i++)for(let j=0;j<2;j++)ck.push(`<rect class="${(i+j)%2?"startB":"startA"}" x="${f(sx-.06+j*.06)}" y="${f(-WW/2+i*WW/6)}" width=".06" height="${f(WW/6)}"/>`);
+  return `<svg class="trk ${cls}" viewBox="${f(minx)} ${f(miny)} ${f(maxx-minx)} ${f(maxy-miny)}" role="img" aria-label="Plánek tratě ${esc(trackName(seq))}">
+    <path class="edge" d="${line(0)}" stroke-width="${WW+.06}"/><path class="body" d="${line(0)}" stroke-width="${WW}"/>
+    <path class="ln0" d="${line(DD)}" stroke-width=".05"/><path class="ln1" d="${line(-DD)}" stroke-width=".05"/>
+    ${ck.join("")}<path class="dir" d="M.78 -.1L.98 0L.78 .1Z"/></svg>`;
+}
+const fmtLen=v=>{const L=S.settings.track.lcm;return L>0?`${(v*L/100).toFixed(2).replace(".",",")} m`:`${v.toFixed(1).replace(".",",")} rovinky`};
+const fmtSize=z=>{const L=S.settings.track.lcm;return L>0?`${(z[0]*L/100).toFixed(1).replace(".",",")} × ${(z[1]*L/100).toFixed(1).replace(".",",")} m`:`${z[0].toFixed(1).replace(".",",")} × ${z[1].toFixed(1).replace(".",",")} rovinky`};
+/* lap speed from lane length; null when the straight length is not set */
+function lapSpeed(trackSeq,lane,ms){const t=trackById(trackSeq),L=S.settings.track.lcm;if(!t||!(L>0)||!ms)return null;const m=(lane?t.b:t.a)*L/100;const kmh=m/(ms/1000)*3.6;return {kmh,scale:kmh*(S.settings.track.scale||43)}}
+
+/* ---------- achievements (computed from race history, so old races count too) ---------- */
+const BADGES=[
+  {id:"debut",m:"1.",n:"Premiéra",d:"Dojeď první závod"},
+  {id:"win",m:"V",n:"Vítěz",d:"Vyhraj závod"},
+  {id:"hat",m:"3×",n:"Hattrick",d:"3 výhry v řadě",goal:3,k:"streak"},
+  {id:"five",m:"5×",n:"Neporazitelný",d:"5 výher v řadě",goal:5,k:"streak"},
+  {id:"both",m:"1+2",n:"Obě dráhy",d:"Vyhraj na dráze 1 i na dráze 2"},
+  {id:"laps100",m:"100",n:"Stovka",d:"Najezdi 100 kol",goal:100,k:"laps"},
+  {id:"laps500",m:"500",n:"Maratonec",d:"Najezdi 500 kol",goal:500,k:"laps"},
+  {id:"fl10",m:"⏱",n:"Rychlík",d:"10× nejrychlejší kolo závodu",goal:10,k:"fl"},
+  {id:"rec",m:"REK",n:"Rekordman",d:"Drž rekord kola na některé trati"},
+  {id:"photo",m:"0,3",n:"Fotofiniš",d:"Vyhraj o méně než 0,3 s"},
+  {id:"obrat",m:"↺",n:"Obrat",d:"Vyhraj závod, ve kterém jsi v polovině prohrával"},
+  {id:"clock",m:"±5",n:"Hodinář",d:"Odjeď 5+ kol, všechna do 5 % od nejlepšího"},
+  {id:"clean",m:"10",n:"Čistý start",d:"10 závodů v řadě bez ulitého startu",goal:10,k:"clean"},
+  {id:"jump",m:"!",n:"Ukvapenec",d:"Ulij start"},
+  {id:"champ",m:"T",n:"Šampion",d:"Vyhraj turnaj"},
+  {id:"perfect",m:"100%",n:"Dokonalý turnaj",d:"Vyhraj v turnaji všechny své závody"},
+  {id:"tracks3",m:"3T",n:"Cestovatel",d:"Závoď na 3 různých tratích",goal:3,k:"tracks"},
+];
+function driverStats(id){
+  const st={n:0,w:0,streak:0,best:0,laps:0,fl:0,lanesWon:new Set(),photo:false,obrat:false,clock:false,clean:0,cleanBest:0,jump:false,tracks:new Set(),rec:false,champ:false,perfect:false};
+  const races=[...S.races].reverse();
+  for(const r of races){
+    const i=r.lanes.findIndex(l=>l.driverId===id);if(i<0)continue;
+    const L=r.lanes[i],o=r.lanes[1-i],won=r.winnerLane===i;
+    st.n++;st.laps+=L.laps.length;st.tracks.add(r.track||"?");
+    if(won){st.w++;st.streak++;st.best=Math.max(st.best,st.streak);st.lanesWon.add(i)}else st.streak=0;
+    if(r.fastestLane===i)st.fl++;
+    if(L.jump){st.jump=true;st.clean=0}else{st.clean++;st.cleanBest=Math.max(st.cleanBest,st.clean)}
+    if(won&&r.mode==="laps"&&L.finished&&o&&o.finished&&o.total-L.total<300)st.photo=true;
+    if(won&&o&&L.total){const half=L.total/2,c=a=>{let s=0,n=0;for(const t of a){s+=t;if(s<=half)n++}return n};if(c(o.laps)>c(L.laps))st.obrat=true}
+    if(L.laps.length>=6){const ls=L.laps.slice(1),mn=Math.min(...ls);if(Math.max(...ls)<=mn*1.05)st.clock=true}
+  }
+  const recs={};for(const r of S.races){r.lanes.forEach(l=>{if(!l.driverId)return;const k=r.track||"?";for(const t of l.laps)if(!recs[k]||t<recs[k].t)recs[k]={t,id:l.driverId}})}
+  st.rec=Object.values(recs).some(x=>x.id===id);
+  for(const t of S.tournaments){if(!tourDone(t)||!t.players.includes(id))continue;
+    if(standings(t)[0]?.id===id)st.champ=true;
+    const mine=t.matches.filter(m=>m.l1===id||m.l2===id);if(mine.length>=2&&mine.every(m=>m.res?.winner===id))st.perfect=true}
+  return st;
+}
+function badgesFor(id){
+  const st=driverStats(id);
+  const val={streak:st.best,laps:st.laps,fl:st.fl,clean:st.cleanBest,tracks:st.tracks.size};
+  const got={debut:st.n>=1,win:st.w>=1,hat:st.best>=3,five:st.best>=5,both:st.lanesWon.size>=2,laps100:st.laps>=100,laps500:st.laps>=500,fl10:st.fl>=10,rec:st.rec,photo:st.photo,obrat:st.obrat,clock:st.clock,clean:st.cleanBest>=10,jump:st.jump,champ:st.champ,perfect:st.perfect,tracks3:st.tracks.size>=3};
+  return BADGES.map(b=>({...b,got:!!got[b.id],prog:b.k?`${Math.min(val[b.k],b.goal)}/${b.goal}`:""}));
+}
+const gotSet=id=>new Set(id?badgesFor(id).filter(b=>b.got).map(b=>b.id):[]);
 
 /* ---------- sound & voice ---------- */
 let actx=null;
@@ -273,14 +395,14 @@ function say(text){
 const buzz=ms=>{try{navigator.vibrate?.(ms)}catch{}};
 
 /* ---------- UI state ---------- */
-const ui={tab:"race",confirm:null,tourOpen:null,camLane:0,
+const ui={tab:"race",confirm:null,tourOpen:null,camLane:0,pick:null,recAll:false,showAllTracks:false,
   tf:{open:false,name:"",players:[],legs:2,mode:"laps",laps:10,minutes:3}};
 let pendingRender=false;
 function typing(){const a=document.activeElement;return a&&a.matches&&a.matches("#main input[type=text]")}
 function render(force){
   if(!force&&typing()){pendingRender=true;return}
   pendingRender=false;
-  const views={race:viewRace,tour:viewTour,cam:viewCam,records:viewRecords,settings:viewSettings};
+  const views={race:viewRace,tour:viewTour,cam:viewCam,tracks:viewTracks,records:viewRecords,settings:viewSettings};
   if(CAMBOX.parentElement?.id==="camSlot")$("#camHold").appendChild(CAMBOX);
   $("#main").innerHTML=views[ui.tab]();
   document.querySelectorAll("#tabs button").forEach(b=>b.dataset.tab===ui.tab?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
@@ -335,7 +457,7 @@ function viewRace(){
     <div class="row spread"><div class="grow"><div><span class="dot l0"></span>${esc(driverName(nm.l1)||"?")}</div><div><span class="dot l1"></span>${esc(driverName(nm.l2)||"?")}</div></div>
     <button class="btn primary" data-act="playMatch" data-t="${t.id}" data-m="${nm.id}">Připravit závod ${t.matches.indexOf(nm)+1}/${t.matches.length}</button></div></div>`:""}
   <section class="card">
-    <h3>Nový závod</h3>
+    <div class="row spread"><h3>Nový závod</h3><button class="btn small ghost" data-act="tab" data-tab="tracks">Trať: ${esc(trackName(st.track.cur))}</button></div>
     <div class="lanepick">
       <span class="chip l0">Dráha 1<small>${esc(st.cars[0])}</small></span>
       <select id="setup0" data-setup="0" aria-label="Jezdec na dráze 1">${driverOptions(S.setup[0],0)}</select>
@@ -356,7 +478,7 @@ function recentRaces(n){
 }
 function raceRow(r){
   const w=r.lanes[r.winnerLane];
-  return `<div><span class="dot l${r.winnerLane}"></span><div class="grow"><div class="ellip"><b>${esc(w?.name||"–")}</b> vyhrál/a · ${r.lanes.map(l=>esc(l.name)).join(" vs ")}</div><div class="hint">${fmtDate(r.at)} · ${r.mode==="laps"?`${r.target} ${kol(r.target)}`:`${r.target} min`} · nejrychlejší kolo ${fmtLap(r.fastest)} s</div></div></div>`;
+  return `<div><span class="dot l${r.winnerLane}"></span><div class="grow"><div class="ellip"><b>${esc(w?.name||"–")}</b> vyhrál/a · ${r.lanes.map(l=>esc(l.name)).join(" vs ")}</div><div class="hint">${fmtDate(r.at)} · ${esc(trackName(r.track))} · ${r.mode==="laps"?`${r.target} ${kol(r.target)}`:`${r.target} min`} · nejrychlejší kolo ${fmtLap(r.fastest)} s</div></div></div>`;
 }
 
 function viewTour(){
@@ -408,7 +530,7 @@ function viewTourDetail(t){
 }
 
 function viewCam(){
-  const c=S.settings.cam,secure=window.isSecureContext&&navigator.mediaDevices?.getUserMedia;
+  const c=S.settings.cam,secure=window.isSecureContext&&navigator.mediaDevices?.getUserMedia,color=c.method!=="motion";
   return `
   <section class="card">
     <h3>Počítání kol kamerou</h3>
@@ -426,35 +548,101 @@ function viewCam(){
       <button data-act="camLane" data-v="1" aria-pressed="${ui.camLane===1}">Zóna dráhy 2</button>
     </div>
     <div class="cam-slot" id="camSlot"></div>
-    <p class="hint">Klepni nebo táhni prstem v obraze, kam patří zóna vybrané dráhy.</p>
-    <div class="meters">${[0,1].map(i=>`<div class="meter l${i}" id="meter${i}"><span class="hint">${LANE_LABEL[i]} · průjezdy</span><span class="cnt num" id="cnt${i}">${Cam.test[i]}</span><div class="bar"><i id="bar${i}"></i><b style="left:${Math.min(100,c.thr*2)}%"></b></div></div>`).join("")}</div>
+    <p class="hint">${ui.pick!=null?`<b style="color:var(--${ui.pick?"l2":"l1"})">Klepni v obraze na auto dráhy ${ui.pick+1}.</b> Nejlépe na jeho barevnou kapotu.`:"Klepni nebo táhni prstem v obraze, kam patří zóna vybrané dráhy."}</p>
+    <div class="meters">${[0,1].map(i=>`<div class="meter l${i}" id="meter${i}"><span class="hint">${LANE_LABEL[i]} · průjezdy</span><span class="cnt num" id="cnt${i}">${Cam.test[i]}</span><div class="bar"><i id="bar${i}"></i><b style="left:${Math.min(100,(color?c.thrC:c.thr)*2)}%"></b></div></div>`).join("")}</div>
+    <div class="row"><button class="btn small" data-act="camTestReset">Vynulovat průjezdy</button></div>
+  </section>
+  <section class="card">
+    <h3>Jak kamera pozná auto</h3>
+    <div class="seg" role="group" aria-label="Způsob detekce">
+      <button data-act="camMethod" data-v="color" aria-pressed="${color}">Podle barvy auta</button>
+      <button data-act="camMethod" data-v="motion" aria-pressed="${!color}">Podle pohybu</button>
+    </div>
+    ${color?`
+    <p class="hint">Kamera hledá v zóně jen barvu daného auta. Stíny, ruka nad dráhou ani otřes dráhy kolo nezapočítají a druhé auto se nesplete.</p>
+    ${[0,1].map(i=>{const k=c.col[i];return `<div class="row" style="flex-wrap:nowrap"><span class="swatch" style="background:rgb(${k.rgb.join(",")})"></span><span class="grow">${LANE_LABEL[i]}<small class="hint" style="display:block">odstín ${Math.round(k.h)}°</small></span><button class="btn small${ui.pick===i?" primary":""}" data-act="camPick" data-v="${i}">${ui.pick===i?"Klepni na auto…":"Naučit barvu"}</button></div>`}).join("")}
+    ${toggle("cam.mask",c.mask,"Ukázat, co kamera vidí jako auto","obarví v obraze body, které odpovídají barvě auta")}
+    <label class="row spread" for="tol"><span>Tolerance barvy<small class="hint" style="display:block">víc = bere i podobné odstíny</small></span><span class="hint num">±${c.tol}°</span></label>
+    <input type="range" id="tol" data-camnum="tol" min="6" max="45" value="${c.tol}">
+    <label class="row spread" for="thrC"><span>Kolik zóny musí auto zakrýt</span><span class="hint num">${c.thrC} %</span></label>
+    <input type="range" id="thrC" data-camnum="thrC" min="2" max="40" value="${c.thrC}">`
+    :`<p class="hint">Počítá jakoukoli změnu v zóně. Hodí se, když má auto podobnou barvu jako dráha, ale zachytí i stíny a ruku.</p>
+    <label class="row spread" for="thr"><span>Citlivost<small class="hint" style="display:block">nižší číslo = citlivější</small></span><span class="hint num">${c.thr} %</span></label>
+    <input type="range" id="thr" data-camnum="thr" min="3" max="45" value="${c.thr}">`}
+  </section>
+  <section class="card">
+    <h3>Zóna dráhy ${ui.camLane+1}</h3>
     <label class="row spread" for="zw"><span>Šířka zóny</span><span class="hint num">${Math.round(c.zones[ui.camLane].w*100)} %</span></label>
     <input type="range" id="zw" data-zone="w" min="4" max="45" value="${Math.round(c.zones[ui.camLane].w*100)}">
     <label class="row spread" for="zh"><span>Výška zóny</span><span class="hint num">${Math.round(c.zones[ui.camLane].h*100)} %</span></label>
     <input type="range" id="zh" data-zone="h" min="4" max="45" value="${Math.round(c.zones[ui.camLane].h*100)}">
-    <label class="row spread" for="thr"><span>Citlivost<small class="hint" style="display:block">nižší číslo = citlivější</small></span><span class="hint num">${c.thr} %</span></label>
-    <input type="range" id="thr" data-thr min="3" max="45" value="${c.thr}">
-    <div class="row"><button class="btn small" data-act="camTestReset">Vynulovat průjezdy</button></div>
-    <p class="hint">Vyzkoušej to: protlač auto zónou. Počítadlo by mělo skočit přesně o 1. Když počítá i bez auta, sniž citlivost (posuň doprava). Když auto nezachytí, posuň doleva nebo zónu zvětši.</p>
+    <p class="hint">Vyzkoušej to: protlač auto zónou. Počítadlo by mělo skočit přesně o 1. Když auto nezachytí, zvětši zónu nebo toleranci barvy, případně sniž, kolik zóny musí auto zakrýt. Když počítá i bez auta, udělej to obráceně.</p>
   </section>`:""}
   <section class="card">
     ${toggle("cam.auto",c.auto,"Počítat kola kamerou","Když je kamera zapnutá. Klepání na displej funguje vždy jako záloha.")}
   </section>`;
 }
 
+function viewTracks(){
+  const tr=S.settings.track,cur=tr.cur,ct=trackById(cur);
+  const fits=t=>{const p=pieceCount(t.s);return p.c<=tr.c&&p.s<=tr.s&&p.x<=tr.x};
+  const missing=t=>{const p=pieceCount(t.s),m=[];const dc=p.c-tr.c,ds=p.s-tr.s,dx=p.x-tr.x;
+    if(dc>0)m.push(`${dc} ${dc===1?"zatáčka":dc<5?"zatáčky":"zatáček"}`);if(ds>0)m.push(`${ds} ${ds===1?"rovinka":ds<5?"rovinky":"rovinek"}`);if(dx>0)m.push("křížení");return {n:Math.max(0,dc)+Math.max(0,ds)+Math.max(0,dx)*2,txt:m.join(", ")}};
+  const card=(t,extra="")=>{const p=pieceCount(t.s),fair=Math.abs(t.a-t.b)<.01,diff=Math.round(Math.abs(t.a-t.b)/Math.max(t.a,t.b)*100);
+    return `<button class="tcard" data-act="pickTrack" data-v="${t.s}" aria-current="${t.s===cur}">${trackSVG(t.s)}
+      <b>${esc(trackName(t.s))}</b>
+      <span class="hint">${p.c} zatáček · ${p.s} ${p.s===1?"rovinka":p.s<5?"rovinky":"rovinek"}${p.x?" · křížení":""}</span>
+      <span class="hint">${fmtSize(t.z)} · kolo ${fmtLen((t.a+t.b)/2)}</span>
+      <span class="row" style="gap:6px">${fair?`<span class="tag fair">Férová</span>`:`<span class="tag">Vnitřní −${diff} %</span>`}${t.s===cur?`<span class="tag">Postavená</span>`:""}${extra}</span></button>`};
+  const own=TRACKS.filter(fits).sort((a,b)=>b.s.length-a.s.length||(Math.abs(a.a-a.b)-Math.abs(b.a-b.b)));
+  const more=TRACKS.filter(t=>!fits(t)).map(t=>({t,m:missing(t)})).sort((a,b)=>a.m.n-b.m.n||b.t.s.length-a.t.s.length);
+  const moreShown=ui.showAllTracks?more:more.slice(0,6);
+  return `
+  <section class="card">
+    <h3>${esc(trackName(cur))}</h3>
+    ${ct?`<div style="max-width:420px;margin:0 auto;width:100%">${trackSVG(cur)}</div>
+    <p class="hint">${fmtSize(ct.z)} · kolo na dráze 1: ${fmtLen(ct.a)}, na dráze 2: ${fmtLen(ct.b)}. ${Math.abs(ct.a-ct.b)<.01?"Obě dráhy jsou stejně dlouhé, protože se kříží.":"Bez křížení je vnitřní dráha vždycky kratší, proto se v turnaji dráhy střídají."}</p>`:""}
+    <p class="hint">Rekordy kol se ukládají ke každé trati zvlášť. Žlutá čára je dráha 1, modrá dráha 2, šachovnice je start a šipka směr jízdy.</p>
+  </section>
+  <section class="card">
+    <h3>Tvoje dílky</h3>
+    <div class="inv">
+      <span>Zatáčky 45°</span>${stepper("tc",tr.c,"ks")}
+      <span>Rovinky<small class="hint" style="display:block">bez startovní</small></span>${stepper("ts",tr.s,"ks")}
+      <span>Křížení</span>${stepper("tx",tr.x,"ks")}
+      <label for="lcm">Délka rovinky<small class="hint" style="display:block">změř pravítkem, pak uvidíš metry a rychlost</small></label><span class="row" style="gap:6px;flex-wrap:nowrap"><input type="number" id="lcm" data-tracknum="lcm" min="0" max="100" step="0.5" inputmode="decimal" value="${tr.lcm||""}" placeholder="cm"><span class="hint">cm</span></span>
+      <label for="scale">Měřítko aut</label><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="hint">1 :</span><input type="number" id="scale" data-tracknum="scale" min="10" max="100" step="1" inputmode="numeric" value="${tr.scale}"></span>
+    </div>
+    <p class="hint">Počty jsem odhadl z fotky vaší osmičky (12 zatáček, 3 rovinky, startovní rovinka a křížení). Když máte jiné, oprav je.</p>
+  </section>
+  <section class="card"><h2>Co postavíš ze svých dílků · ${own.length}</h2>
+    ${own.length?`<div class="tgrid">${own.map(t=>card(t)).join("")}</div>`:`<div class="empty">Z těchhle dílků se okruh uzavřít nedá. Zkontroluj počty.</div>`}
+  </section>
+  ${more.length?`<section class="card"><h2>S pár dílky navíc</h2>
+    <div class="tgrid">${moreShown.map(x=>card(x.t,`<span class="tag miss">+ ${esc(x.m.txt)}</span>`)).join("")}</div>
+    ${more.length>6?`<button class="btn small ghost" data-act="moreTracks">${ui.showAllTracks?"Ukázat méně":`Ukázat všech ${more.length}`}</button>`:""}
+  </section>`:""}
+  <p class="hint">Plánky počítají se zatáčkami po 45° a s tím, že rovinka, startovní rovinka i křížení jsou stejně dlouhé. Tak to vychází z vaší osmičky. Generátor je ve složce tools.</p>`;
+}
+
 function viewRecords(){
-  const rs=S.races;
-  if(!rs.length)return `<div class="empty">Zatím žádné závody. Rekordy a historie se objeví po prvním dojetém závodě.</div>`;
+  const cur=S.settings.track.cur;
+  const rs=ui.recAll?S.races:S.races.filter(r=>r.track===cur);
+  const filt=`<div class="seg" role="group" aria-label="Které tratě"><button data-act="recAll" data-v="0" aria-pressed="${!ui.recAll}">${esc(trackName(cur))}</button><button data-act="recAll" data-v="1" aria-pressed="${ui.recAll}">Všechny tratě</button></div>`;
+  const badgeSec=S.drivers.length?`<section class="card"><h2>Odznaky</h2><div class="drvbadges">${S.drivers.map(d=>{const bs=badgesFor(d.id),n=bs.filter(b=>b.got).length;
+    return `<details${ui.openBadges===d.id?" open":""} data-badges="${d.id}"><summary><b>${esc(d.name)}</b><span class="hint">${n} z ${bs.length}</span></summary><div class="badges">${bs.map(b=>`<div class="badge${b.got?" got":""}"><span class="medal">${esc(b.m)}</span><b>${esc(b.n)}</b><span>${esc(b.d)}${b.prog&&!b.got?` · ${b.prog}`:""}</span></div>`).join("")}</div></details>`}).join("")}</div></section>`:"";
+  if(!rs.length)return `${filt}<div class="empty">${S.races.length?"Na téhle trati se zatím nezávodilo.":"Zatím žádné závody. Rekordy a historie se objeví po prvním dojetém závodě."}</div>${badgeSec}`;
   const laneRec=[0,1].map(i=>{let best=null;for(const r of rs){const l=r.lanes[i];if(!l)continue;l.laps.forEach(t=>{if(best==null||t<best.t)best={t,name:l.name,at:r.at}})}return best});
   const per={};
   for(const r of rs)r.lanes.forEach((l,i)=>{const k=l.driverId||`car${i}`;const p=per[k]||(per[k]={name:l.driverId?(driverName(l.driverId)||l.name):S.settings.cars[i],n:0,w:0,best:null,laps:0});p.n++;if(r.winnerLane===i)p.w++;p.laps+=l.laps.length;l.laps.forEach(t=>{if(p.best==null||t<p.best)p.best=t})});
   const prs=Object.values(per).sort((a,b)=>(a.best??1e12)-(b.best??1e12));
-  return `
+  return `${filt}
   <section class="card"><h2>Rekordy drah</h2><div class="list">${laneRec.map((b,i)=>`<div><span class="chip l${i}">${LANE_LABEL[i]}</span><div class="grow">${b?`<b class="num" style="font:800 26px/1 var(--f-display)">${fmtLap(b.t)} s</b><div class="hint ellip">${esc(b.name)} · ${fmtDate(b.at)}</div>`:`<span class="hint">zatím nic</span>`}</div></div>`).join("")}</div></section>
   <section class="card"><h2>Jezdci</h2><div class="tblwrap"><table><thead><tr><th>Jezdec</th><th class="r">Závody</th><th class="r">Výhry</th><th class="r">Kola</th><th class="r">Nejl. kolo</th></tr></thead>
   <tbody>${prs.map(p=>`<tr><td>${esc(p.name)}</td><td class="r">${p.n}</td><td class="r">${p.w}</td><td class="r">${p.laps}</td><td class="r">${fmtLap(p.best)}</td></tr>`).join("")}</tbody></table></div></section>
   <section class="card"><h2>Historie</h2><div class="list">${rs.slice(0,60).map(r=>`<div style="display:block"><details><summary>${raceRow(r).replace(/^<div>|<\/div>$/g,"")}</summary>${lapTable(r)}
-    <div class="row" style="margin-top:8px">${ui.confirm===`dr:${r.id}`?`<button class="btn small danger" data-act="delRace" data-id="${r.id}">Smazat závod</button><button class="btn small ghost" data-act="cancelAsk">Ne</button>`:`<button class="btn small ghost" data-act="ask" data-key="dr:${r.id}">Smazat</button>`}</div></details></div>`).join("")}</div></section>`;
+    <div class="row" style="margin-top:8px">${ui.confirm===`dr:${r.id}`?`<button class="btn small danger" data-act="delRace" data-id="${r.id}">Smazat závod</button><button class="btn small ghost" data-act="cancelAsk">Ne</button>`:`<button class="btn small ghost" data-act="ask" data-key="dr:${r.id}">Smazat</button>`}</div></details></div>`).join("")}</div></section>
+  ${badgeSec}`;
 }
 function lapTable(r){
   const max=Math.max(...r.lanes.map(l=>l.laps.length),0);if(!max)return "";
@@ -502,9 +690,17 @@ const A={
     else if(k==="tfminutes")f.minutes=clamp(f.minutes+d,1,30);
     else if(k==="legs")f.legs=clamp(f.legs+d,1,4);
     else if(k==="minLap")st.minLap=clamp(Math.round((st.minLap+d*.5)*10)/10,.5,10);
+    else if(k==="tc")st.track.c=clamp(st.track.c+d,0,40);
+    else if(k==="ts")st.track.s=clamp(st.track.s+d,0,20);
+    else if(k==="tx")st.track.x=clamp(st.track.x+d,0,1);
     save();render(true);
   },
-  toggle(el){const k=el.dataset.key;if(k==="cam.auto")S.settings.cam.auto=!S.settings.cam.auto;else S.settings[k]=!S.settings[k];save();render(true)},
+  toggle(el){const k=el.dataset.key;if(k.startsWith("cam."))S.settings.cam[k.slice(4)]=!S.settings.cam[k.slice(4)];else S.settings[k]=!S.settings[k];save();render(true);camDot()},
+  camMethod(el){S.settings.cam.method=el.dataset.v;Cam.z=[{},{}];save();render(true)},
+  camPick(el){const i=+el.dataset.v;ui.pick=ui.pick===i?null:i;render(true)},
+  pickTrack(el){S.settings.track.cur=el.dataset.v;save();render(true);scrollTo({top:0,behavior:"smooth"});toast(`Postavená trať: ${trackName(el.dataset.v)}`)},
+  moreTracks(){ui.showAllTracks=!ui.showAllTracks;render(true)},
+  recAll(el){ui.recAll=el.dataset.v==="1";render(true)},
   swapSetup(){S.setup=[S.setup[1],S.setup[0]];save();render(true)},
   startRace(){const st=S.settings;openRace({lanes:[S.setup[0],S.setup[1]],mode:st.mode,laps:st.laps,minutes:st.minutes})},
   playMatch(el){const t=S.tournaments.find(x=>x.id===el.dataset.t),m=t?.matches.find(x=>x.id===el.dataset.m);if(!m)return;
@@ -546,14 +742,16 @@ document.addEventListener("change",e=>{
   if(t.dataset.setup!=null){S.setup[+t.dataset.setup]=t.value;save()}
   else if(t.dataset.car!=null){S.settings.cars[+t.dataset.car]=t.value.trim()||DEF.cars[+t.dataset.car];save()}
   else if(t.id==="importFile"&&t.files[0]){const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.app!=="osmicka")throw 0;S=normalize(d);saveNow();toast("Záloha nahrána.");render(true)}catch{toast("Tohle není záloha z Osmičky.")}};r.readAsText(t.files[0])}
-  else if(t.dataset.zone||t.dataset.thr!=null)render(true);
+  else if(t.dataset.zone||t.dataset.camnum)render(true);
+  else if(t.dataset.tracknum){const v=parseFloat(String(t.value).replace(",","."));S.settings.track[t.dataset.tracknum]=isFinite(v)&&v>0?v:(t.dataset.tracknum==="scale"?43:0);save();render(true)}
 });
 document.addEventListener("input",e=>{
   const t=e.target;
   if(t.dataset.bind==="tfName")ui.tf.name=t.value;
   else if(t.dataset.zone){S.settings.cam.zones[ui.camLane][t.dataset.zone]=+t.value/100;save();const lab=t.previousElementSibling?.querySelector(".hint");if(lab)lab.textContent=t.value+" %"}
-  else if(t.dataset.thr!=null){S.settings.cam.thr=+t.value;save();const lab=t.previousElementSibling?.querySelector(".hint");if(lab)lab.textContent=t.value+" %"}
+  else if(t.dataset.camnum){const k=t.dataset.camnum;S.settings.cam[k]=+t.value;save();const lab=t.previousElementSibling?.querySelector(".hint");if(lab)lab.textContent=k==="tol"?`±${t.value}°`:t.value+" %"}
 });
+document.addEventListener("toggle",e=>{const d=e.target;if(d.dataset?.badges)ui.openBadges=d.open?d.dataset.badges:(ui.openBadges===d.dataset.badges?null:ui.openBadges)},true);
 
 /* ---------- camera lap detection ---------- */
 const Cam={
@@ -581,7 +779,10 @@ const Cam={
     const W=this.W,H=Math.round(W*vh/vw);
     if(this.cv.width!==W||this.cv.height!==H){this.cv.width=W;this.cv.height=H}
     this.ctx.drawImage(v,0,0,W,H);
-    const img=this.ctx.getImageData(0,0,W,H).data,thr=S.settings.cam.thr;
+    const img=this.ctx.getImageData(0,0,W,H).data,c=S.settings.cam;
+    this.img=img;this.H=H;
+    if(c.method!=="motion"){this.processColor(img,W,H,now);this.draw();return}
+    const thr=c.thr;
     for(let i=0;i<2;i++){
       const z=S.settings.cam.zones[i];
       const x0=Math.max(0,Math.round((z.x-z.w/2)*W)),x1=Math.min(W,Math.round((z.x+z.w/2)*W));
@@ -602,13 +803,43 @@ const Cam={
     }
     this.draw();
   },
+  /* colour mode: count only pixels whose hue matches that lane's car. Shadows, hands and a nudged track change
+     brightness, not hue, so they do not count. A lap is the moment the car appears; it must then leave the zone
+     for 2 frames before the next one can count. */
+  processColor(img,W,H,now){
+    const c=S.settings.cam,tol=c.tol;
+    for(let i=0;i<2;i++){
+      const z=c.zones[i],col=c.col[i];
+      const x0=Math.max(0,Math.round((z.x-z.w/2)*W)),x1=Math.min(W,Math.round((z.x+z.w/2)*W));
+      const y0=Math.max(0,Math.round((z.y-z.h/2)*H)),y1=Math.min(H,Math.round((z.y+z.h/2)*H));
+      const n=(x1-x0)*(y1-y0);if(n<4)continue;
+      const st=this.z[i];if(st.armed===undefined){st.armed=true;st.off=0}
+      /* match mask, then count only pixels whose right and lower neighbours match too: a car is a solid patch,
+         compression noise and coloured fringes along shadow edges are not */
+      const zw=x1-x0,zh=y1-y0,m=st.m&&st.m.length===n?st.m:(st.m=new Uint8Array(n));
+      for(let y=0;y<zh;y++)for(let x=0;x<zw;x++){const p=((y+y0)*W+x+x0)*4;m[y*zw+x]=colorMatch(img[p],img[p+1],img[p+2],col,tol)?1:0}
+      let cnt=0;
+      for(let y=0;y<zh-1;y++)for(let x=0;x<zw-1;x++){const k=y*zw+x;if(m[k]&&m[k+1]&&m[k+zw])cnt++}
+      const score=cnt/n*100;this.score[i]=score;
+      if(score>=c.thrC){st.off=0;if(st.armed){st.armed=false;onDetect(i,now)}}
+      else if(score<c.thrC*.5){if(++st.off>=2)st.armed=true}
+    }
+  },
   draw(){
     const box=CAMBOX;if(box.parentElement?.id==="camHold")return;
     const r=box.getBoundingClientRect();if(!r.width)return;
     const dpr=Math.min(2,devicePixelRatio||1),cw=Math.round(r.width*dpr),ch=Math.round(r.height*dpr);
     if(this.ov.width!==cw||this.ov.height!==ch){this.ov.width=cw;this.ov.height=ch}
-    const g=this.ov.getContext("2d"),cols=[getCss("--l1"),getCss("--l2")],thr=S.settings.cam.thr;
+    const c=S.settings.cam,g=this.ov.getContext("2d"),cols=[getCss("--l1"),getCss("--l2")],thr=c.method==="motion"?c.thr:c.thrC;
     g.clearRect(0,0,cw,ch);
+    if(c.mask&&c.method!=="motion"&&this.img&&ui.tab==="cam"&&!R){
+      /* paint every pixel the camera takes for a car, in that lane's colour */
+      const W=this.W,H=this.H;this.mcv=this.mcv||document.createElement("canvas");
+      if(this.mcv.width!==W||this.mcv.height!==H){this.mcv.width=W;this.mcv.height=H}
+      const mc=this.mcv.getContext("2d"),out=mc.createImageData(W,H),src=this.img,d=out.data,lc=[[247,201,22],[63,176,255]];
+      for(let p=0;p<W*H*4;p+=4)for(let i=0;i<2;i++)if(colorMatch(src[p],src[p+1],src[p+2],c.col[i],c.tol)){d[p]=lc[i][0];d[p+1]=lc[i][1];d[p+2]=lc[i][2];d[p+3]=230;break}
+      mc.putImageData(out,0,0);g.imageSmoothingEnabled=false;g.drawImage(this.mcv,0,0,cw,ch);
+    }
     S.settings.cam.zones.forEach((z,i)=>{
       const x=(z.x-z.w/2)*cw,y=(z.y-z.h/2)*ch,w=z.w*cw,h=z.h*ch,hot=this.score[i]>=thr;
       g.fillStyle=cols[i];g.globalAlpha=hot?.45:Math.min(.3,this.score[i]/thr*.3);g.fillRect(x,y,w,h);
@@ -618,6 +849,14 @@ const Cam={
     for(let i=0;i<2;i++){const b=$("#bar"+i);if(b)b.style.width=Math.min(100,this.score[i]*2)+"%"}
   },
 };
+function rgb2hsv(r,g,b){const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360}return [h,mx?d/mx:0,mx/255]}
+function colorMatch(r,g,b,col,tol){
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  if(mx<Math.max(30,col.v*255*.3))return false;                 /* too dark: shadow or black plastic */
+  if(d/mx<Math.max(.3,col.s*.55))return false;                  /* too grey: track, rails, beige floor */
+  let h;if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;
+  const dh=Math.abs(h-col.h);return Math.min(dh,360-dh)<=tol;
+}
 const cssCache={};function getCss(n){return cssCache[n]||(cssCache[n]=getComputedStyle(document.documentElement).getPropertyValue(n).trim())}
 function camDot(){const d=$("#camDot");d.classList.toggle("on",Cam.running);d.querySelector("span").textContent=Cam.running?(S.settings.cam.auto?"kamera počítá":"kamera zap."):"kamera vyp."}
 function placeCam(){
@@ -633,7 +872,22 @@ function onDetect(i,now){
 /* place a zone by tapping/dragging on the camera picture */
 (()=>{const box=CAMBOX;let drag=false;
   const put=e=>{const r=box.getBoundingClientRect(),z=S.settings.cam.zones[ui.camLane];z.x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));z.y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));};
-  box.addEventListener("pointerdown",e=>{if(R||ui.tab!=="cam")return;drag=true;box.setPointerCapture(e.pointerId);put(e)});
+  box.addEventListener("pointerdown",e=>{if(R||ui.tab!=="cam")return;
+    if(ui.pick!=null){learnColor(ui.pick,e);return}
+    drag=true;box.setPointerCapture(e.pointerId);put(e)});
+  /* average a small patch under the finger and keep its hue as that car's colour */
+  function learnColor(i,e){
+    const img=Cam.img,W=Cam.W,H=Cam.H;if(!img)return;
+    const r=box.getBoundingClientRect(),cx=Math.round((e.clientX-r.left)/r.width*W),cy=Math.round((e.clientY-r.top)/r.height*H);
+    let sr=0,sg=0,sb=0,n=0,samples=[];
+    for(let y=cy-2;y<=cy+2;y++)for(let x=cx-2;x<=cx+2;x++){if(x<0||y<0||x>=W||y>=H)continue;const p=(y*W+x)*4;samples.push([img[p],img[p+1],img[p+2]])}
+    /* keep the more saturated half so a black stripe or a rail under the finger does not spoil it */
+    samples.sort((a,b)=>(Math.max(...b)-Math.min(...b))-(Math.max(...a)-Math.min(...a)));
+    for(const s of samples.slice(0,Math.max(1,Math.ceil(samples.length/2)))){sr+=s[0];sg+=s[1];sb+=s[2];n++}
+    if(!n)return;const rgb=[Math.round(sr/n),Math.round(sg/n),Math.round(sb/n)],[h,s,v]=rgb2hsv(...rgb);
+    if(s<.2){toast("Tohle místo je skoro šedé. Klepni přímo na barevnou kapotu auta.");return}
+    S.settings.cam.col[i]={h,s,v,rgb};ui.pick=null;save();render(true);toast(`Barva auta pro dráhu ${i+1} uložena.`);
+  }
   box.addEventListener("pointermove",e=>{if(drag)put(e)});
   box.addEventListener("pointerup",()=>{if(drag){drag=false;save()}});
   box.addEventListener("pointercancel",()=>{drag=false});
@@ -746,14 +1000,22 @@ function finalize(){
   const all=lanes.flatMap((l,i)=>l.laps.map(t=>({t,i})));
   if(!all.length||eff(W)<=0){showResults(null);return}
   const f=all.reduce((a,b)=>b.t<a.t?b:a);
-  const race={id:R.id,at:Date.now(),mode:R.mode,target:R.mode==="laps"?R.laps:R.minutes,tournamentId:R.tournamentId,matchId:R.matchId,lanes,winnerLane:W.i,order:rk.map(x=>x.i),fastest:f.t,fastestLane:f.i};
+  const track=S.settings.track.cur;
+  const race={id:R.id,at:Date.now(),track,mode:R.mode,target:R.mode==="laps"?R.laps:R.minutes,tournamentId:R.tournamentId,matchId:R.matchId,lanes,winnerLane:W.i,order:rk.map(x=>x.i),fastest:f.t,fastestLane:f.i};
+  /* what was true before this race: track record per lane and each driver's badges */
+  const prevRec=[0,1].map(i=>{let b=null;for(const r of S.races)if(r.track===track&&r.lanes[i])for(const t of r.lanes[i].laps)if(b==null||t<b)b=t;return b});
+  const before=lanes.map(l=>gotSet(l.driverId));
   S.races.unshift(race);
   if(R.tournamentId){const t=S.tournaments.find(x=>x.id===R.tournamentId),m=t?.matches.find(x=>x.id===R.matchId);
     if(m){const best={};lanes.forEach(l=>{if(l.driverId&&l.laps.length)best[l.driverId]=Math.min(...l.laps)});
       m.res={winner:lanes[W.i].driverId,fastest:lanes[f.i].driverId,best};m.raceId=race.id}}
-  saveNow();showResults(race);render(true);
+  const news=[];
+  lanes.forEach((l,i)=>{if(!l.driverId)return;const after=gotSet(l.driverId);for(const b of BADGES)if(after.has(b.id)&&!before[i].has(b.id))news.push({b,name:l.name})});
+  const recs=[0,1].filter(i=>{const b=lanes[i].laps.length?Math.min(...lanes[i].laps):null;return b!=null&&prevRec[i]!=null&&b<prevRec[i]});
+  saveNow();showResults(race,{news,recs});render(true);
+  if(news.length)setTimeout(()=>beep(1320,.12,"sine",.12),400);
 }
-function showResults(race){
+function showResults(race,extra={news:[],recs:[]}){
   const s=$("#results");s.hidden=false;releaseWake();
   const t=R.tournamentId&&S.tournaments.find(x=>x.id===R.tournamentId),nm=t&&nextMatch(t);
   if(!race){s.innerHTML=`<div class="sheet-in"><div class="winner"><small>Závod bez výsledku</small><b>Žádné kolo</b></div><p class="hint" style="text-align:center">Nikdo neprojel cílem, nic se neuložilo.</p><button class="go-btn" data-ract="again">Znovu na start</button><button class="btn" data-ract="done">Zavřít</button></div>`;return}
@@ -763,7 +1025,9 @@ function showResults(race){
   s.innerHTML=`<div class="sheet-in">
     <div class="winner"><small>Vítěz · ${LANE_LABEL[race.winnerLane]}</small><b style="color:var(--${race.winnerLane?"l2":"l1"})">${esc(w.name)}</b></div>
     <section class="card"><div class="tblwrap"><table><thead><tr><th></th><th>Jezdec</th><th class="r">Kola</th><th class="r">Čas</th><th class="r">Nejl. kolo</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="hint">Nejrychlejší kolo: <b class="fl">${fmtLap(race.fastest)} s</b> (${esc(race.lanes[race.fastestLane].name)})${t?` · +${PTS_FL} bod do turnaje`:""}</p></section>
+    <p class="hint">Nejrychlejší kolo: <b class="fl">${fmtLap(race.fastest)} s</b> (${esc(race.lanes[race.fastestLane].name)})${t?` · +${PTS_FL} bod do turnaje`:""}${(()=>{const v=lapSpeed(race.track,race.fastestLane,race.fastest);return v?`<br>To je ${v.kmh.toFixed(1).replace(".",",")} km/h. Ve skutečné velikosti (1:${S.settings.track.scale}) by to bylo asi <b>${Math.round(v.scale)} km/h</b>.`:""})()}</p></section>
+    ${extra.recs.map(i=>`<div class="newbadge"><span class="medal">REK</span><div><b>Nový rekord tratě na dráze ${i+1}</b><div class="hint">${esc(race.lanes[i].name)} · ${fmtLap(Math.min(...race.lanes[i].laps))} s na trati ${esc(trackName(race.track))}</div></div></div>`).join("")}
+    ${extra.news.map(x=>`<div class="newbadge"><span class="medal">${esc(x.b.m)}</span><div><b>Nový odznak: ${esc(x.b.n)}</b><div class="hint">${esc(x.name)} · ${esc(x.b.d)}</div></div></div>`).join("")}
     <section class="card"><h2>Kolo po kole</h2>${lapTable(race)}</section>
     ${t?(nm?`<button class="go-btn" data-ract="next">Další závod: ${esc(driverName(nm.l1))} vs ${esc(driverName(nm.l2))}</button>`:`<div class="champ"><h2>Turnaj dokončen</h2><b>${esc(driverName(standings(t)[0]?.id))}</b></div>`)+`<button class="btn" data-ract="toTour">Pořadí turnaje</button>`
       :`<button class="go-btn" data-ract="rematch">Odveta s prohozenými drahami</button><button class="btn" data-ract="again">Znovu stejně</button><button class="btn ghost" data-ract="done">Zavřít</button>`}
